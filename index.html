@@ -1,276 +1,881 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diagnóstico de Madurez Digital – iKruger</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Consola del Broker para el Smart Market Challenge de Kruger School.">
+<style>body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>KrugerSchool Smart Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#1a2a3a;min-height:100vh}
-header{background:linear-gradient(135deg,#0a2342 0%,#1a4a7a 100%);color:#fff;padding:22px 32px;display:flex;align-items:center;gap:18px}
-header h1{font-size:1.35rem;font-weight:700;letter-spacing:.5px}
-header span{font-size:.85rem;opacity:.75;margin-top:3px;display:block}
-.badge-hdr{background:#e8b84b;color:#0a2342;font-weight:700;font-size:.75rem;padding:4px 10px;border-radius:20px;white-space:nowrap}
-.container{max-width:1100px;margin:0 auto;padding:24px 16px}
-.sel-wrap{background:#fff;border-radius:12px;padding:18px 22px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.sel-wrap label{font-weight:600;font-size:.95rem;color:#0a2342}
-select{flex:1;min-width:220px;padding:9px 14px;border-radius:8px;border:1.5px solid #c0d0e0;font-size:.95rem;background:#f8fafc;color:#1a2a3a;cursor:pointer}
-select:focus{outline:none;border-color:#1a4a7a}
-.tabs{display:flex;gap:4px;margin-bottom:18px}
-.tab{padding:9px 22px;border-radius:8px 8px 0 0;border:none;background:#d8e4f0;color:#1a2a3a;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .2s}
-.tab.active{background:#fff;color:#0a2342;border-bottom:3px solid #e8b84b}
-.tab-content{display:none}.tab-content.active{display:block}
-.card-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
-.card{background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center}
-.card .val{font-size:2.1rem;font-weight:800;margin:6px 0 2px}
-.card .lbl{font-size:.78rem;color:#5a7a9a;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.card .sub{font-size:.82rem;margin-top:4px;font-weight:600}
-.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.78rem;font-weight:700}
-.lvl-1{background:#fee2e2;color:#b91c1c}
-.lvl-2{background:#fef3c7;color:#92400e}
-.lvl-3{background:#dbeafe;color:#1e40af}
-.lvl-4{background:#d1fae5;color:#065f46}
-.lvl-5{background:#ede9fe;color:#4c1d95}
-.section{background:#fff;border-radius:12px;padding:20px 22px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
-.section h3{font-size:1rem;font-weight:700;color:#0a2342;margin-bottom:14px;border-left:4px solid #e8b84b;padding-left:10px}
-.dim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:6px}
-.dim-card{background:#f8fafc;border-radius:9px;padding:13px 14px;text-align:center;border:1.5px solid #e0eaf4}
-.dim-card .dval{font-size:1.6rem;font-weight:800;color:#0a2342}
-.dim-card .dnm{font-size:.75rem;color:#5a7a9a;font-weight:600;margin-bottom:6px}
-.bar-wrap{background:#e5eef7;border-radius:4px;height:8px;margin-top:6px}
-.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#1a4a7a,#e8b84b)}
-.chart-wrap{position:relative;height:300px;margin:0 auto}
-.chart-wrap-lg{position:relative;height:360px;margin:0 auto}
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th{background:#0a2342;color:#fff;padding:9px 12px;text-align:left;font-weight:600}
-td{padding:8px 12px;border-bottom:1px solid #e8eef5}
-tr:nth-child(even) td{background:#f5f8fc}
-tr:hover td{background:#eaf1fb}
-.q-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eef2f7}
-.q-row:last-child{border-bottom:none}
-.q-txt{font-size:.82rem;color:#2a3a4a}
-.q-score{font-size:.95rem;font-weight:700;min-width:34px;text-align:center;padding:3px 7px;border-radius:6px}
-.sc1{background:#fee2e2;color:#b91c1c}.sc2{background:#fef3c7;color:#92400e}
-.sc3{background:#dbeafe;color:#1e40af}.sc4{background:#d1fae5;color:#065f46}
-.sc5{background:#ede9fe;color:#4c1d95}
-footer{text-align:center;padding:22px;color:#7a9ab0;font-size:.8rem;margin-top:10px}
-@media(max-width:600px){header{flex-direction:column;align-items:flex-start}.tabs{flex-wrap:wrap}}
+/* Layout: Kruger School trading board. Night-blue ground for the projector, flat rounded panels, orange for the one main action, cyan for key data; each asset keeps one color everywhere. Single dark theme by design. */
+:root{
+  --bg:#0A1430; --dot:#0A1430; --surface:#111D40; --sunk:#0D1836; --line:#26365F;
+  --ink:#F3F6FF; --muted:#9AA8C9; --shadow:transparent; --accent:#FF5B00; --accent-ink:#0A1430; --accent-soft:#3A1E0C;
+  --pop:#FF5B00; --cyan:#00B2E3;
+  --up:#2BD47D; --down:#FF8A7A; --up-soft:#123A2A; --down-soft:#46181C; --warn:#FFD23F; --warn-soft:#3E2E10;
+  --a1:#0099C4; --a2:#22A85F; --a3:#9877F5; --a4:#C97000; --a5:#EC4C8F; --cash:#4A5B88;
+  --c-rent:#00B2E3; --c-div:#2BD47D; --c-risk:#FFD23F; --c-dec:#B9A6FF;
+  --f-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:24px; --bw:2px; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:0 48px;
+  background-image:radial-gradient(var(--dot) 1.2px,transparent 1.3px);background-size:22px 22px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:17px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1320px;margin:0 auto}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border:var(--bw) solid var(--ink);background:var(--surface);border-radius:12px;padding:8px 14px;font-weight:700;box-shadow:2px 2px 0 var(--shadow);transition:transform .08s,box-shadow .08s}
+button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--shadow)}
+button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--shadow)}
+button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink)}
+button.pop{background:var(--pop);color:#121429}
+button.ghost{box-shadow:none;border-color:var(--line);background:transparent}
+button.ghost:hover{border-color:var(--ink);transform:none}
+button.danger{background:var(--down);color:#fff}
+button:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+input,select{background:var(--surface);border:var(--bw) solid var(--line);border-radius:12px;padding:9px 12px;min-width:0}
+input:focus,select:focus{border-color:var(--ink)}
+.lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+label.f{display:flex;flex-direction:column;gap:6px}
+.muted{color:var(--muted)}
+.up{color:var(--up)} .down{color:var(--down)}
+
+.card{background:var(--surface);border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:4px 4px 0 var(--shadow);padding:18px;min-width:0}
+.card.flat{box-shadow:none;border-color:var(--line)}
+.card-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px;margin-bottom:12px}
+.card-h p{margin:0;font-size:13px;color:var(--muted)}
+.grid{display:grid;gap:18px}
+.cols-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:18px}
+
+/* control strip */
+.strip{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);padding-block:12px 0;border-bottom:var(--bw) solid var(--ink)}
+.strip-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.logo{display:flex;align-items:center;gap:12px}
+.ks-logo{height:34px;width:auto;flex:none;display:block}
+.logo-name{border-left:var(--bw) solid var(--line);padding-left:12px}
+.logo-name b{font-family:var(--f-display);font-size:17px;font-weight:800;line-height:1;display:block}
+.logo-name span{font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.round-ctl{display:flex;align-items:center;gap:6px}
+.round-ctl button{padding:6px 10px}
+.round-badge{font-family:var(--f-display);font-weight:800;font-size:18px;padding:6px 14px;border-radius:12px;background:var(--ink);color:var(--bg);min-width:62px;text-align:center}
+.phases{display:none}
+.phase{font-size:12px;padding:6px 12px;border-radius:999px;box-shadow:none;border-color:var(--line);background:var(--surface);color:var(--muted)}
+.phase:hover{box-shadow:none;transform:none;border-color:var(--ink)}
+.phase[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.phase.open[aria-pressed="true"]{background:var(--up);border-color:var(--up);color:var(--accent-ink)}
+.phase.closed[aria-pressed="true"]{background:var(--down);border-color:var(--down);color:#fff}
+.clock{display:flex;align-items:center;gap:8px;margin-left:auto}
+.ring{width:46px;height:46px;flex:none}
+.ring .bgc{stroke:var(--sunk)} .ring .fgc{stroke:var(--accent);transition:stroke-dashoffset .25s linear}
+.ring.low .fgc{stroke:var(--down)}
+.clock .t{font-family:var(--f-mono);font-size:22px;font-weight:700;min-width:62px}
+.clock .t.low{color:var(--down)}
+.tabs{display:flex;gap:4px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.tab{border:var(--bw) solid transparent;border-bottom:none;border-radius:12px 12px 0 0;box-shadow:none;background:transparent;color:var(--muted);padding:9px 14px;white-space:nowrap}
+.tab:hover{transform:none;box-shadow:none;color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--surface);border-color:var(--ink);color:var(--ink);margin-bottom:-2px;padding-bottom:11px}
+section.desk{padding-top:22px}
+
+/* round guide */
+.guide{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:12px;padding:10px 12px;border:var(--bw) solid var(--ink);border-radius:var(--r);background:var(--surface);box-shadow:3px 3px 0 var(--shadow)}
+.steps{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.step{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 10px 5px 5px;border-radius:999px;border:var(--bw) solid var(--line);background:var(--surface);color:var(--muted);box-shadow:none}
+.step:hover{transform:none;box-shadow:none;border-color:var(--ink)}
+.step .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);font-size:11px}
+.step.done{color:var(--ink)} .step.done .n{background:var(--ink);color:var(--bg)}
+.step[aria-current="step"]{border-color:var(--ink);color:var(--ink);background:var(--accent-soft)}
+.step[aria-current="step"] .n{background:var(--accent);color:var(--accent-ink)}
+.step.open[aria-current="step"]{background:var(--up-soft)} .step.open[aria-current="step"] .n{background:var(--up);color:#fff}
+.step.closed[aria-current="step"]{background:var(--down-soft)} .step.closed[aria-current="step"] .n{background:var(--down);color:#fff}
+.steps .sep{width:10px;height:2px;background:var(--line)}
+.todo{flex:1 1 280px;min-width:0;font-size:14px;line-height:1.35}
+.todo b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.next{font-size:15px;padding:10px 16px;white-space:nowrap}
+/* tags & pills */
+.tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--sunk);white-space:nowrap}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}
+.pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+.pill.ok{background:var(--up-soft);color:var(--up)} .pill.no{background:var(--down-soft);color:var(--down)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.info{background:var(--accent-soft);color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+
+/* market */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:stretch;margin-bottom:18px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}}
+.hero-main{display:flex;flex-direction:column;gap:12px;justify-content:center}
+.hero h1{font-size:clamp(32px,5.4vw,68px);font-weight:800;line-height:.95;text-transform:uppercase}
+.newsbox{font-size:clamp(17px,1.8vw,22px);line-height:1.35;background:var(--pop);color:#121429;border:var(--bw) solid var(--ink);border-radius:var(--r);padding:12px 16px;box-shadow:4px 4px 0 var(--shadow);max-width:70ch;font-weight:500}
+.statebox{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:220px}
+.bigring{width:150px;height:150px;position:relative}
+.bigring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.bigring .bgc{stroke:var(--sunk)} .bigring .fgc{stroke:var(--accent);transition:stroke-dashoffset .25s linear}
+.bigring.low .fgc{stroke:var(--down)}
+.bigring .t{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-mono);font-size:34px;font-weight:700}
+.flag{font-family:var(--f-display);font-weight:800;font-size:15px;text-transform:uppercase;padding:8px 14px;border-radius:999px;border:var(--bw) solid var(--ink)}
+.flag.open{background:var(--up);color:#fff}.flag.closed{background:var(--down);color:#fff}.flag.idle{background:var(--surface)}
+.tickers{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:18px}
+.ticker{position:relative;overflow:hidden;padding:0;display:flex;flex-direction:column}
+.ticker-top{height:10px;background:var(--c)}
+.ticker-body{padding:12px 14px 12px;display:flex;flex-direction:column;gap:6px}
+.ticker .sym{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.ticker .sym b{font-family:var(--f-mono);font-size:13px;padding:2px 8px;border-radius:8px;background:var(--c);color:#fff}
+.ticker .nm{font-family:var(--f-display);font-size:16px;font-weight:700}
+.ticker .px{font-family:var(--f-mono);font-size:clamp(34px,3.8vw,48px);font-weight:700;line-height:1}
+.chg{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-mono);font-weight:700;font-size:14px;padding:3px 9px;border-radius:999px;align-self:flex-start}
+.chg.u{background:var(--up-soft);color:var(--up)} .chg.d{background:var(--down-soft);color:var(--down)} .chg.z{background:var(--sunk);color:var(--muted)}
+.ticker svg{width:100%;height:46px;display:block}
+
+/* charts */
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font-family:var(--f-body);font-size:12px;fill:var(--muted)}
+.chart .mono{font-family:var(--f-mono)}
+.chart .ink{fill:var(--ink)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .base{stroke:var(--ink);stroke-width:1.5}
+.chart .hit{fill:transparent;cursor:crosshair}
+.chart .hit:hover{fill:var(--ink);fill-opacity:.05}
+.chart .now{fill:var(--accent);fill-opacity:.08}
+.chartwrap{overflow-x:auto}
+.heat{display:grid;gap:4px;font-size:12px;min-width:520px}
+.heat .h{font-weight:700;color:var(--muted);text-align:center;font-size:11px;padding:4px 0}
+.heat .rn{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
+.heat .cell{border-radius:8px;padding:8px 2px;text-align:center;font-family:var(--f-mono);font-weight:700;font-size:12px;color:var(--ink)}
+.heat .cell.cur{outline:2px solid var(--ink);outline-offset:-2px}
+.heat .cell.fut{background:var(--sunk);color:var(--muted);opacity:.5}
+
+/* broker */
+.desk-cols{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.desk-cols{grid-template-columns:1fr}}
+.ticket{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.ticket input,.ticket select{width:100%}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{padding:12px;font-size:15px}
+.seg button[aria-pressed="true"].buy{background:var(--up);color:#fff}
+.seg button[aria-pressed="true"].sell{background:var(--down);color:#fff}
+.assetpick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.assetpick button{padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;box-shadow:none;border-color:var(--line)}
+.assetpick button i{width:100%;height:5px;border-radius:3px;background:var(--c)}
+.assetpick button small{font-family:var(--f-mono);font-weight:700;font-size:14px}
+.assetpick button[aria-pressed="true"]{border-color:var(--ink);background:var(--sunk);box-shadow:2px 2px 0 var(--shadow)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:center;font-weight:500}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.preview{background:var(--sunk);border-radius:12px;padding:12px;font-size:14px;display:grid;gap:6px}
+.preview .line{display:flex;justify-content:space-between;gap:10px}
+.capbar{position:relative;height:14px;border-radius:7px;background:var(--surface);border:1px solid var(--line);overflow:hidden;margin-top:4px}
+.capbar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px}
+.capbar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.verdict{border-radius:12px;padding:10px 12px;font-weight:700;font-size:14px;border:var(--bw) solid currentColor}
+.verdict.ok{background:var(--up-soft);color:var(--up)} .verdict.no{background:var(--down-soft);color:var(--down)}
+.teamgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.teamchip{text-align:left;display:grid;gap:6px;box-shadow:none;border-color:var(--line);padding:10px 12px}
+.teamchip[aria-pressed="true"]{border-color:var(--ink);box-shadow:3px 3px 0 var(--shadow);background:var(--accent-soft)}
+.teamchip b{font-size:14px}
+.teamchip .num{font-size:12px;color:var(--muted);font-weight:500}
+.stackbar{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;background:var(--sunk)}
+.stackbar i{display:block;height:100%}
+details.key{border:var(--bw) dashed var(--line);border-radius:var(--r);padding:12px 16px;background:var(--surface)}
+details.key summary{cursor:pointer;font-weight:700}
+table{border-collapse:collapse;width:100%}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.r,th.r{text-align:right}
+.tablewrap{overflow-x:auto}
+
+/* wallet */
+.wallet{display:grid;gap:14px}
+.wallet-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px 18px}
+.wbig{font-family:var(--f-mono);font-weight:700;font-size:clamp(30px,3.4vw,42px);line-height:1}
+.wmid{font-family:var(--f-mono);font-weight:700;font-size:20px}
+.flow{display:grid;grid-template-columns:minmax(0,auto) minmax(60px,1fr) auto;gap:7px 12px;align-items:center;font-size:13px}
+.flow .fl{font-weight:500}
+.flow .fl b{display:inline-block;width:14px;font-family:var(--f-mono)}
+.flow .bar{height:14px;border-radius:7px;background:var(--sunk);position:relative;overflow:hidden}
+.flow .bar i{position:absolute;top:0;bottom:0;border-radius:7px}
+.flow .fv{font-family:var(--f-mono);font-weight:700;text-align:right;white-space:nowrap}
+.flow .total{border-top:var(--bw) solid var(--ink);padding-top:7px}
+.flow.compact{font-size:12px}.flow.compact .bar{height:10px}
+.stripe-out{background:repeating-linear-gradient(135deg,var(--down) 0 6px,color-mix(in oklab,var(--down) 55%,var(--surface)) 6px 12px)}
+.stripe-in{background:repeating-linear-gradient(135deg,var(--up) 0 6px,color-mix(in oklab,var(--up) 55%,var(--surface)) 6px 12px)}
+.cashmove{background:var(--sunk);border-radius:14px;padding:14px;display:grid;gap:10px}
+.cm-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.cm-row .big{font-family:var(--f-mono);font-weight:700;font-size:24px;line-height:1.1}
+.cm-arrow{font-size:22px;font-weight:700;color:var(--muted)}
+.gauge{position:relative;height:22px;border-radius:11px;background:var(--surface);border:1px solid var(--line);overflow:hidden;display:flex}
+.gauge i{display:block;height:100%}
+.gauge-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.gauge-legend span{display:inline-flex;align-items:center;gap:6px}
+.poss td,.poss th{padding:6px 8px}
+/* teams */
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:18px}
+.team-top{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--sunk);border-radius:12px;padding:8px 10px;min-width:0}
+.kpi .v{font-family:var(--f-mono);font-size:16px;font-weight:700}
+.kpi .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.rank-n{font-family:var(--f-display);font-weight:800;font-size:13px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);flex:none}
+.rank-n.g1{background:var(--pop);color:#121429}
+
+/* podium */
+.podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;max-width:640px;margin:0 auto 4px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pod .blk{width:100%;border:var(--bw) solid var(--ink);border-radius:14px 14px 0 0;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:28px;box-shadow:4px 4px 0 var(--shadow)}
+.pod b{font-family:var(--f-display);font-size:14px}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--down-soft);color:var(--down);padding:10px 14px;border-radius:12px;font-weight:500}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:700;z-index:30;max-width:calc(100% - 32px);box-shadow:4px 4px 0 var(--accent)}
+.tip{position:fixed;z-index:40;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.4;max-width:260px;box-shadow:3px 3px 0 var(--accent)}
+.tip .r{display:flex;justify-content:space-between;gap:14px;align-items:center}
+.tip .r span{display:inline-flex;align-items:center;gap:6px}
+.empty{padding:20px;text-align:center;color:var(--muted);border:var(--bw) dashed var(--line);border-radius:var(--r)}
+@media (max-width:560px){.ks-logo{height:26px}.logo-name b{font-size:14px}.clock{margin-left:0}.two{grid-template-columns:1fr}.assetpick{grid-template-columns:repeat(3,minmax(0,1fr))}.team-top{grid-template-columns:90px minmax(0,1fr)}.statebox{min-width:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.flag.open{animation:pulse 1.2s ease-in-out infinite}
+
+/* Kruger School redesign */
+body{background-image:none}
+h1,h2,h3{font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px}
+button{border:2px solid var(--line);background:transparent;box-shadow:none;border-radius:14px;font-weight:800;min-height:40px}
+button:hover{transform:none;box-shadow:none;border-color:var(--ink)}
+button:active{transform:translateY(1px);box-shadow:none}
+button.primary,button.pop{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.danger{background:transparent;border-color:var(--down);color:var(--down)}
+input,select{background:var(--sunk);border-color:#3A4C7C;color:var(--ink)}
+input:focus,select:focus{border-color:var(--cyan)}
+.card{border:1px solid var(--line);border-radius:24px;box-shadow:none;padding:22px}
+.strip{border-bottom:1px solid var(--line);padding-block:16px 0}
+.logo-name{border-left:2px solid var(--line);padding-left:16px}
+.logo-name b{font-size:20px;letter-spacing:.02em;text-transform:uppercase}
+.round-badge{background:var(--accent);color:var(--accent-ink);border-radius:999px}
+.round-ctl button{border-radius:999px}
+.guide{border:1px solid var(--line);box-shadow:none;border-radius:22px;background:var(--surface)}
+.step{border:2px solid var(--line);background:transparent;color:var(--muted)}
+.step.done{color:#C9D3EC}.step.done .n{background:var(--ink);color:var(--bg)}
+.step[aria-current="step"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.step[aria-current="step"] .n{background:var(--accent);color:var(--accent-ink)}
+.step.open[aria-current="step"]{background:var(--up-soft);border-color:var(--up);color:var(--up)}
+.step.open[aria-current="step"] .n{background:var(--up);color:var(--accent-ink)}
+.step.closed[aria-current="step"]{background:var(--down-soft);border-color:var(--down);color:var(--down)}
+.step.closed[aria-current="step"] .n{background:var(--down);color:var(--accent-ink)}
+.todo b{color:var(--cyan)}
+.tabs{gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;width:max-content;max-width:100%;margin-block:14px}
+.tab{border:none;border-radius:999px;padding:9px 16px;color:#C9D3EC;min-height:0}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);margin-bottom:0;padding-bottom:9px}
+.lbl{font-weight:800;letter-spacing:.12em}
+.hero .lbl{color:var(--cyan);font-size:13px}
+.hero h1{font-size:clamp(56px,8.5vw,128px);line-height:.88;letter-spacing:-.02em}
+.newsbox{background:var(--accent);color:var(--accent-ink);border:none;box-shadow:none;border-radius:22px;padding:20px 24px;font-weight:700}
+.statebox{border-radius:28px}
+.bigring{width:200px;height:200px}.bigring .fgc{stroke:var(--up)}.bigring .t{font-size:44px}
+.flag{border:none;font-size:18px;padding:10px 22px;animation:none}
+.flag.open{background:var(--up);color:var(--accent-ink);animation:none}.flag.closed{background:var(--down);color:var(--accent-ink)}.flag.idle{background:var(--sunk);color:var(--ink)}
+.ticker{border-radius:24px}.ticker-top{height:8px}
+.ticker .sym b{color:var(--accent-ink)}
+.ticker .nm{font-weight:600;font-size:19px}
+.ticker .px{font-size:clamp(40px,4.2vw,60px)}
+.chg{font-size:15px;padding:5px 12px}
+.seg{background:var(--sunk);padding:6px;border-radius:16px}
+.seg button{border:none;border-radius:12px;min-height:50px;color:#C9D3EC}
+.seg button[aria-pressed="true"].buy{background:var(--up);color:var(--accent-ink)}
+.seg button[aria-pressed="true"].sell{background:var(--down);color:var(--accent-ink)}
+.assetpick button{background:var(--sunk);border-color:var(--line);border-radius:14px;min-height:72px}
+.assetpick button[aria-pressed="true"]{border-color:var(--ink);background:#1E2A5C;box-shadow:none}
+.teamchip{background:var(--sunk);border-color:var(--line);border-radius:18px}
+.teamchip[aria-pressed="true"]{border-color:var(--accent);background:#1E2A5C;box-shadow:none}
+.cashmove,.preview{background:var(--sunk);border-radius:18px}
+.gauge,.capbar{background:#1C2B57;border:none}
+.kpi{background:var(--sunk);border-radius:14px}
+.rank-n{background:#1C2B57}.rank-n.g1{background:var(--accent);color:var(--accent-ink)}
+.pod .blk{border:none;box-shadow:none;border-radius:18px 18px 0 0}
+.toast{box-shadow:none;border-radius:16px}
+.tip{box-shadow:none;border:2px solid var(--accent)}
+details.key{border-color:var(--line);border-radius:20px}
+.stackbar{background:#1C2B57}
 </style>
 </head>
 <body>
-<header>
-  <div style="flex:1">
-    <h1>Diagnóstico de Madurez Digital</h1>
-    <span>Instituto iKruger · Ecuador 2025-2026</span>
-  </div>
-  <div class="badge-hdr" id="orgCount"></div>
-</header>
 
-<script type="application/json" id="dataScript">[{"name": "EMPRENDER ES MAS SAS", "pais": "ECUADOR", "total": 2.75, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 1.88, "scores": [2.0, 3.0, 2.0, 1, 1, 2.0, 2.0, 2.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 3.25, "scores": [4.0, 4.0, 4.0, 4.0, 3.0, 3.0, 2.0, 2.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 2.38, "scores": [3.0, 3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 3.0, "scores": [2.0, 4.0, 4.0, 3.0, 3.0, 2.0, 3.0, 3.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.25, "scores": [4.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 4.0], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Ayuda en Acción", "pais": "Ecuador", "total": 3.98, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 3.75, "scores": [4.0, 3.0, 4.0, 4.0, 3.0, 4.0, 4.0, 4.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 3.62, "scores": [3.0, 3.0, 4.0, 4.0, 4.0, 3.0, 4.0, 4.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 4.75, "scores": [4.0, 5, 5, 5, 5, 5, 5, 4.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 4.75, "scores": [5, 5, 5, 4.0, 5, 5, 5, 4.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.0, "scores": [3.0, 3.0, 2.0, 2.0, 4.0, 4.0, 3.0, 3.0], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Fundación Prevensud", "pais": "Ecuador, Sierra", "total": 3.3, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 3.0, "scores": [3.0, 3.0, 4.0, 2.0, 4.0, 2.0, 2.0, 4.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 3.88, "scores": [4.0, 4.0, 4.0, 4.0, 3.0, 4.0, 4.0, 4.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.12, "scores": [4.0, 2.0, 3.0, 4.0, 4.0, 3.0, 3.0, 2.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 2.88, "scores": [2.0, 4.0, 3.0, 3.0, 2.0, 4.0, 4.0, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.62, "scores": [4.0, 3.0, 3.0, 3.0, 4.0, 4.0, 3.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Kairos", "pais": "Ecuador", "total": 1.88, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 1.0, "scores": [1, 1, 1, 1, 1, 1, 1, 1], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 1.38, "scores": [2.0, 1, 2.0, 2.0, 1, 1, 1, 1.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 2.38, "scores": [4.0, 1, 1, 1, 4.0, 5, 2.0, 1], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 1.88, "scores": [1, 4.0, 1, 4.0, 1, 1, 2.0, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 2.75, "scores": [2.0, 2.0, 1, 2.0, 2.0, 4.0, 4.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Consultor Ambiental", "pais": "Amazonía Ecuatoriana", "total": 3.88, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 3.12, "scores": [3.0, 3.0, 2.0, 3.0, 3.0, 4.0, 4.0, 3.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 4.25, "scores": [4.0, 4.0, 4.0, 4.0, 5, 4.0, 5, 4.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.88, "scores": [4.0, 3.0, 4.0, 4.0, 4.0, 5, 3.0, 4.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 4.12, "scores": [3.0, 4.0, 4.0, 4.0, 4.0, 5, 4.0, 5], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 4.0, "scores": [4.0, 4.0, 3.0, 5, 4.0, 3.0, 4.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Cáritas Ecuador", "pais": "Ecuador/ todo el país", "total": 1.82, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 1.75, "scores": [2.0, 2.0, 1, 3.0, 2.0, 2.0, 1, 1], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 2.12, "scores": [4.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 1.88, "scores": [1, 3.0, 2.0, 1, 2.0, 3.0, 2.0, 1], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 2.0, "scores": [3.0, 2.0, 2.0, 2.0, 1, 4.0, 1, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 1.38, "scores": [2.0, 1, 2.0, 1, 1, 2.0, 1, 1], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "maria ordonez soy propietaria pero hoy a utilizar una empresa que llevo", "pais": "Ecuador", "total": 2.42, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 2.38, "scores": [3.0, 3.0, 3.0, 3.0, 1, 2.0, 2.0, 2.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 1.62, "scores": [3.0, 1, 2.0, 1, 1, 2.0, 1.0, 2.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.12, "scores": [3.0, 3.0, 3.0, 2.0, 4.0, 4.0, 3.0, 3.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 2.25, "scores": [1, 3.0, 3.0, 3.0, 1, 3.0, 3.0, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 2.75, "scores": [3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 2.0, 3.0], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Fundación El Baúl de Pinocho", "pais": "Ecuador", "total": 3.65, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 3.62, "scores": [3.0, 3.0, 4.0, 2.0, 5, 4.0, 4.0, 4.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 3.5, "scores": [4.0, 4.0, 4.0, 4.0, 4.0, 3.0, 2.0, 3.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.88, "scores": [2.0, 4.0, 4.0, 3.0, 5, 5, 4.0, 4.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 3.5, "scores": [2.0, 3.0, 4.0, 3.0, 3.0, 5, 3.0, 5], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.75, "scores": [3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Fernanda Vinueza - Consultorías", "pais": "Ecuador", "total": 1.9, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 1.38, "scores": [1, 1, 2.0, 2.0, 2.0, 1, 1, 1], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 1.62, "scores": [2.0, 2.0, 1, 1, 1, 2.0, 2.0, 2.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 2.12, "scores": [2.0, 2.0, 2.0, 2.0, 1, 3.0, 3.0, 2.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 1.25, "scores": [1, 1, 2.0, 2.0, 1, 1, 1, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.12, "scores": [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 4.0], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Fundación Nubeth", "pais": "Ecuador / El Oro", "total": 2.98, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 2.62, "scores": [3.0, 3.0, 3.0, 1, 3.0, 3.0, 3.0, 2.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 2.38, "scores": [2.0, 3.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.25, "scores": [3.0, 2.0, 3.0, 3.0, 3.0, 5, 3.0, 4.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 3.5, "scores": [3.0, 5, 4.0, 3.0, 4.0, 3.0, 3.0, 3.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.12, "scores": [3.0, 2.0, 3.0, 3.0, 2.0, 4.0, 3.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Asociación de discapacidades de Guayas Asodis", "pais": "Ecuador", "total": 3.45, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 2.12, "scores": [1, 2.0, 3.0, 2.0, 2.0, 2.0, 2.0, 3.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 2.62, "scores": [2.0, 4.0, 2.0, 2.0, 1, 4.0, 4.0, 2.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 4.5, "scores": [4.0, 4.0, 4.0, 4.0, 5, 5, 5, 5], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 4.5, "scores": [2.0, 4.0, 5, 5, 5, 5, 5, 5], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.5, "scores": [5, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Fundación Kichwa Institute of Science Technology and Humanities (KISTH)", "pais": "Ecuador", "total": 3.1, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 1.25, "scores": [1, 1, 3.0, 1, 1, 1, 1, 1], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 2.75, "scores": [3.0, 4.0, 3.0, 3.0, 4.0, 1, 2.0, 2.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.88, "scores": [5, 2.0, 2.0, 2.0, 5, 5, 5, 5], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 3.75, "scores": [4.0, 5, 1, 5, 5, 1, 5, 4.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.88, "scores": [4.0, 1, 5, 2.0, 5, 5, 4.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Secretaria de Educación, Deñporte y Recreación del Distrito Metropolitano de Quito", "pais": "Ecuador", "total": 3.02, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 3.5, "scores": [3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0, 3.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 2.5, "scores": [3.0, 2.0, 2.0, 2.0, 3.0, 3.0, 2.0, 3.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.62, "scores": [3.0, 4.0, 4.0, 2.0, 5, 4.0, 4.0, 3.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 2.88, "scores": [3.0, 3.0, 4.0, 2.0, 2.0, 5, 2.0, 2.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 2.62, "scores": [3.0, 2.0, 3.0, 2.0, 2.0, 2.0, 3.0, 4.0], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "EC Impulsa", "pais": "Ecuador", "total": 3.2, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 2.88, "scores": [1, 1, 4.0, 1, 4.0, 4.0, 4.0, 4.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 2.5, "scores": [1, 1, 4.0, 4.0, 1, 1, 4.0, 4.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 4.0, "scores": [4.0, 4.0, 2.0, 4.0, 5, 5, 4.0, 4.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 2.88, "scores": [1, 4.0, 4.0, 4.0, 1, 4.0, 4.0, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.75, "scores": [3.0, 4.0, 3.0, 4.0, 4.0, 3.0, 4.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Organización Social Living Hope", "pais": "Ecuador", "total": 2.08, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 2.38, "scores": [2.0, 2.0, 5, 2.0, 2.0, 2.0, 2.0, 2.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 2.0, "scores": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 2.0, "scores": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 2.0, "scores": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 2.0, "scores": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Cavound", "pais": "Ecuador", "total": 5.0, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 5.0, "scores": [5, 5, 5, 5, 5, 5, 5, 5], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 5.0, "scores": [5, 5, 5, 5, 5, 5, 5, 5], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 5.0, "scores": [5, 5, 5, 5, 5, 5, 5, 5], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 5.0, "scores": [5, 5, 5, 5, 5, 5, 5, 5], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 5.0, "scores": [5, 5, 5, 5, 5, 5, 5, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Fundación Prevensud", "pais": "Ecuador", "total": 3.4, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 3.38, "scores": [3.0, 2.0, 4.0, 4.0, 4.0, 3.0, 3.0, 4.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 3.38, "scores": [3.0, 4.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.25, "scores": [3.0, 3.0, 3.0, 4.0, 3.0, 3.0, 4.0, 3.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 3.38, "scores": [3.0, 3.0, 4.0, 3.0, 3.0, 4.0, 3.0, 4.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.62, "scores": [4.0, 3.0, 4.0, 3.0, 3.0, 4.0, 3.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Centro Integral de Innovación Productiva y Empleo (CIIPE)", "pais": "Ecuador/Quito", "total": 2.15, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 1.62, "scores": [1, 3.0, 2.0, 2.0, 1, 1, 1, 2.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 1.5, "scores": [3.0, 1, 1, 1, 2.0, 1, 2.0, 1], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 2.62, "scores": [2.0, 2.0, 2.0, 1, 5, 3.0, 3.0, 3.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 2.25, "scores": [3.0, 4.0, 2.0, 3.0, 1, 3.0, 1, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 2.75, "scores": [2.0, 2.0, 2.0, 3.0, 4.0, 2.0, 2.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "Banco de Alimentos Quito", "pais": "Ecuador", "total": 3.3, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 3.25, "scores": [5, 4.0, 4.0, 2.0, 3.0, 3.0, 3.0, 2.0], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 3.38, "scores": [5, 4.0, 3.0, 3.0, 3.0, 4.0, 2.0, 3.0], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 3.0, "scores": [4.0, 2.0, 2.0, 2.0, 3.0, 5, 3.0, 3.0], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 3.62, "scores": [3.0, 5, 3.0, 2.0, 4.0, 4.0, 4.0, 4.0], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 3.25, "scores": [3.0, 2.0, 3.0, 4.0, 4.0, 3.0, 2.0, 5], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}, {"name": "AGROBIOALLPA", "pais": "ECUADOR", "total": 1.07, "dims": [{"name": "Liderazgo y Estrategia Digital", "avg": 1.12, "scores": [1, 1, 1, 1, 1, 1, 2.0, 1], "labels": ["1.1 Existe una estrategia o política digital escrita, aprobada por la dirección y conocida", "1.2   La misión y los objetivos estratégicos de la organización están explícitamente conec", "1.3  El/la director/a ejecutivo/a lidera activamente o impulsa iniciativas de transformaci", "1.4  Existe un presupuesto anual asignado específicamente a tecnología y transformación di", "1.5  Hay una persona o equipo con la responsabilidad formal de liderar la agenda digital.", "1.6  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.7  La organización revisa y actualiza su estrategia digital al menos una vez al año.", "1.8  El directorio o junta directiva incluye la transformación digital en sus agendas de f"]}, {"name": "Procesos y Operaciones", "avg": 1.12, "scores": [1, 1, 2.0, 1, 1, 1, 1, 1], "labels": ["2.2 Los procesos clave de la organización están documentados y son accesibles para todos l", "2.2  Los flujos de trabajo se gestionan con herramientas digitales compartidas (no en emai", "2.3  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.4  Existe una fuente única y confiable para la información de beneficiarios (no múltiple", "2.5 Los procesos de incorporación y off-boarding de personal incluyen transferencia digita", "2.6  Existen automatizaciones o alertas digitales para tareas repetitivas (recordatorios, ", "2.7  La gestión documental es digital y centralizada (no depende de carpetas locales en co", "2.8  Los procesos son revisados periódicamente para identificar oportunidades de mejora o "]}, {"name": "Tecnología e Infraestructura", "avg": 1.0, "scores": [1, 1, 1, 1, 1, 1, 1, 1], "labels": ["3.1  Las herramientas digitales que usa la organización son adecuadas para su tamaño y mis", "3.2   Existe una política de seguridad informática (contraseñas, accesos, respaldos) conoc", "3.3  Los datos críticos se respaldan automáticamente y se puede restaurar información en c", "3.4  Los sistemas de la organización están integrados o se comunican entre sí (evitan dupl", "3.5  Las licencias de software están regularizadas (la organización no usa software pirata", "3.6  Existe conectividad a internet confiable en todas las sedes o equipos de trabajo que ", "3.7  Los sistemas utilizados tienen soporte técnico accesible y actualizaciones regulares", "3.8  \nLa organización evalúa nuevas herramientas de manera sistemática antes de adoptarlas"]}, {"name": "Datos e Información", "avg": 1.12, "scores": [2.0, 1, 1, 1, 1, 1, 1, 1], "labels": ["4.1  Existe un sistema de monitoreo y evaluación  que genera datos sobre el impacto de los", "4.2  Los datos recopilados se usan activamente para tomar decisiones programáticas y estra", "4.3 Existe una persona o equipo responsable de la calidad y gobernanza de los datos instit", "4.4  Los indicadores clave de la organización se pueden consultar en tiempo razonable (men", "4.5  Existen dashboards o visualizaciones que el equipo directivo usa regularmente para ge", "4.6  La organización tiene políticas de privacidad y consentimiento para los datos de bene", "4.7  Los datos de distintos programas o equipos están integrados (no son islas de informac", "4.8  La organización publica o comparte datos abiertos sobre su impacto con la comunidad o"]}, {"name": "Cultura y Capacidades", "avg": 1.0, "scores": [1, 1, 1, 1, 1, 1, 1, 1], "labels": ["5.1  El personal tiene las habilidades digitales necesarias para usar efectivamente las he", "5.2  Existe un plan de formación digital continua para el equipo (no solo una capacitación", "5.3  Cuando se implementa una nueva herramienta, se invierte tiempo en capacitación y acom", "5.4  Existen 'campeones digitales' en los equipos: personas que apoyan a sus compañeros co", "5.5  El equipo directivo modela el uso de herramientas digitales (las usa ellos mismos, no", "5.6   La cultura organizacional es abierta a experimentar con nuevas herramientas y aprend", "5.7  Los equipos comparten aprendizajes sobre herramientas y prácticas digitales de forma ", "5.8  La organización reconoce y valora las contribuciones del personal a la mejora digital"]}]}]</script>
 
-<div class="container">
-  <div class="sel-wrap">
-    <label>Organización:</label>
-    <select id="orgSel" onchange="render()"></select>
-  </div>
-  <div class="tabs">
-    <button class="tab active" onclick="swTab('resumen',this)">Resumen</button>
-    <button class="tab" onclick="swTab('preguntas',this)">Preguntas</button>
-    <button class="tab" onclick="swTab('comparacion',this)">Comparación</button>
-  </div>
-
-  <div id="resumen" class="tab-content active">
-    <div id="cards" class="card-row"></div>
-    <div class="section"><h3>Radar por Dimensión</h3><div class="chart-wrap"><canvas id="radarChart"></canvas></div></div>
-    <div id="dimCards" class="dim-grid"></div>
-    <div class="section"><h3>Puntaje Promedio por Dimensión</h3><div class="chart-wrap"><canvas id="barDimChart"></canvas></div></div>
-    <div class="section"><h3>Tabla de Puntajes por Dimensión</h3><div id="dimTable"></div></div>
-  </div>
-
-  <div id="preguntas" class="tab-content">
-    <div id="qSections"></div>
-  </div>
-
-  <div id="comparacion" class="tab-content">
-    <div class="section"><h3>Comparación entre Organizaciones – Puntaje Total</h3><div class="chart-wrap-lg"><canvas id="compChart"></canvas></div></div>
-    <div class="section"><h3>Tabla Comparativa</h3><div id="compTable"></div></div>
-  </div>
+<div class="wrap">
+  <header class="strip">
+    <div class="strip-row">
+      <div class="logo"><svg class="ks-logo" role="img" aria-label="Kruger School" xmlns="http://www.w3.org/2000/svg" width="260" height="61" viewBox="0 0 260 61" fill="none"><path d="M171.427 9.39619C171.317 8.43385 177.974 12.8722 178.506 14.6589C179.038 16.4457 171.822 12.8722 171.427 9.39619Z" fill="#00B2E3"></path><path d="M187.594 0.0595308C188.128 -0.749532 190.388 6.92616 189.65 8.63844C188.913 10.3507 185.669 2.98048 187.594 0.0595308Z" fill="#00B2E3"></path><path d="M205.256 0.456919C206.081 -0.049977 204.874 7.86 203.479 9.09823C202.084 10.3365 202.271 2.28634 205.256 0.456919Z" fill="#00B2E3"></path><path d="M222.111 8.86973C223.077 8.92118 217.591 14.7445 215.74 14.9722C213.889 15.1988 218.616 8.68142 222.111 8.86973Z" fill="#00B2E3"></path><path d="M58.4409 46.7827H48.2318C47.6526 46.7827 47.1797 46.4137 47.1797 45.8357V41.6261C47.1797 41.047 47.6526 40.6255 48.2318 40.6255H58.4409C59.02 40.6255 59.493 41.047 59.493 41.6261V45.8357C59.493 46.4137 59.02 46.7827 58.4409 46.7827Z" fill="#FF5B00"></path><path d="M75.6478 60.2006C71.4908 60.2006 68.386 59.7277 65.7026 59.0434C65.1771 58.8847 64.6505 58.5705 64.6505 57.9913V52.8337C64.6505 52.0969 65.0709 51.8341 65.5975 51.8341H65.7552C67.9119 52.0443 73.7013 52.4658 75.7529 52.4658C79.3844 52.4658 80.4365 51.3075 80.4365 48.7818C80.4365 47.2556 79.6997 46.4137 76.9638 44.7825L69.7019 40.4667C64.8081 37.5721 63.4922 34.257 63.4922 30.4153C63.4922 24.6271 66.7547 20.1548 76.9638 20.1548C80.8055 20.1548 86.1197 20.7854 88.1199 21.312C88.5403 21.4171 88.9092 21.6799 88.9092 22.259V27.5732C88.9092 28.0472 88.6979 28.4677 88.0148 28.4677H87.9097C86.4361 28.3615 80.3325 27.8885 76.7536 27.8885C73.7538 27.8885 72.6491 28.783 72.6491 30.6781C72.6491 32.1517 73.3334 32.8348 76.1755 34.361L82.9108 37.9925C88.3837 40.9386 90.015 44.4124 90.015 48.6745C90.015 54.2525 86.331 60.1984 75.6489 60.1984" fill="#FF5B00"></path><path d="M118.429 59.3062C117.324 59.6751 114.272 60.2006 110.588 60.2006C102.589 60.2006 95.0117 55.9911 95.0117 43.4676V36.8364C95.0117 24.3118 102.589 20.1548 110.588 20.1548C114.272 20.1548 117.323 20.6814 118.429 21.0492C119.165 21.2594 119.586 21.4696 119.586 22.2065V27.3104C119.586 27.9421 119.27 28.3626 118.586 28.3626H118.427C116.427 28.2049 113.534 27.9421 110.639 27.9421C107.009 27.9421 104.114 29.8373 104.114 36.8353V43.4665C104.114 50.4645 107.009 52.3596 110.639 52.3596C113.534 52.3596 116.427 52.0958 118.427 51.9381H118.586C119.27 51.9381 119.586 52.3596 119.586 52.9902V58.0942C119.586 58.831 119.165 59.0938 118.429 59.304" fill="#FF5B00"></path><path d="M155.364 59.7277H148.47C147.892 59.7277 147.418 59.2548 147.418 58.6756V43.4688H134.42V58.6756C134.42 59.2548 133.946 59.7277 133.368 59.7277H126.474C125.896 59.7277 125.422 59.2548 125.422 58.6756V21.6285C125.422 21.0504 125.896 20.6289 126.474 20.6289H133.368C133.946 20.6289 134.42 21.0493 134.42 21.6285V35.6267H147.418V21.6285C147.418 21.0504 147.891 20.6289 148.47 20.6289H155.364C155.943 20.6289 156.416 21.0493 156.416 21.6285V58.6745C156.416 59.2537 155.943 59.7267 155.364 59.7267" fill="#FF5B00"></path><path d="M258.652 59.5174C256.916 59.8853 252.864 60.2006 250.074 60.2006C243.286 60.2006 237.234 58.4653 237.234 48.8879V21.682C237.234 21.1039 237.707 20.6299 238.288 20.6299H245.18C245.76 20.6299 246.234 21.1028 246.234 21.682V48.8879C246.234 51.6239 247.128 52.4669 249.601 52.4669H258.652C259.231 52.4669 259.704 52.9398 259.704 53.519V58.4128C259.704 59.0959 259.389 59.3598 258.652 59.5174Z" fill="#FF5B00"></path><path d="M215.187 20.1558C207.478 20.1558 201.179 23.8496 199.864 33.2234C199.028 32.7657 198.07 32.5052 196.973 32.5402C195.74 32.5796 194.697 32.9256 193.814 33.4686C192.576 23.9131 186.236 20.1558 178.459 20.1558C169.776 20.1558 162.883 24.8393 162.883 37.0475V43.3098C162.883 55.518 169.776 60.2005 178.459 60.2005C187.142 60.2005 194.034 55.518 194.034 43.3098V38.5496C195.592 37.8708 197.472 37.6683 199.61 38.5682V43.3098C199.61 55.518 206.504 60.2005 215.186 60.2005C223.868 60.2005 230.762 55.518 230.762 43.3098V37.0475C230.762 24.8393 223.869 20.1558 215.186 20.1558M184.984 43.3098C184.984 49.6236 182.878 52.307 178.459 52.307C174.039 52.307 171.986 49.6236 171.986 43.3098V37.0475C171.986 30.7338 174.039 28.0493 178.459 28.0493C182.878 28.0493 184.984 30.7327 184.984 37.0475V43.3098ZM221.712 43.3098C221.712 49.6236 219.607 52.307 215.187 52.307C210.767 52.307 208.715 49.6236 208.715 43.3098V37.0475C208.715 30.7338 210.767 28.0493 215.187 28.0493C219.607 28.0493 221.712 30.7327 221.712 37.0475V43.3098Z" fill="#00B2E3"></path><path d="M219.508 36.2904C219.508 37.8362 218.255 39.0909 216.708 39.0909C215.161 39.0909 213.906 37.8362 213.906 36.2904C213.906 34.7445 215.161 33.4888 216.708 33.4888C218.255 33.4888 219.508 34.7434 219.508 36.2904Z" fill="#00B2E3"></path><path d="M182.782 36.2904C182.782 37.8362 181.528 39.0909 179.981 39.0909C178.434 39.0909 177.18 37.8362 177.18 36.2904C177.18 34.7445 178.433 33.4888 179.981 33.4888C181.529 33.4888 182.782 34.7434 182.782 36.2904Z" fill="#00B2E3"></path><path d="M10.67 0.0463867C4.77664 0.0463867 0 4.82412 0 10.7164C0 16.6086 4.77664 21.3842 10.67 21.3842C16.5633 21.3842 21.34 16.6097 21.34 10.7164C21.34 4.82303 16.5622 0.0463867 10.67 0.0463867ZM10.67 12.1878C9.85655 12.1878 9.19857 11.5298 9.19857 10.7164C9.19857 9.90293 9.85655 9.24496 10.67 9.24496C11.4834 9.24496 12.1414 9.90293 12.1414 10.7164C12.1414 11.5298 11.4834 12.1878 10.67 12.1878Z" fill="#FF5B00"></path><path d="M29.0034 33.647H12.7422L34.4752 59.6859H50.7473L29.0034 33.647Z" fill="#FF5B00"></path><path d="M34.4774 4.54492L12.7422 30.5849H29.0055L50.7462 4.54492H34.4774Z" fill="#FF5B00"></path><path d="M9.81911 34.082L3.78125 40.6684V59.7279H15.6468V41.0636L9.81911 34.082Z" fill="#FF5B00"></path></svg><div class="logo-name"><b>Smart Market</b><span>Mesa del Broker</span></div></div>
+      <div class="round-ctl">
+        <button id="prevRound" aria-label="Ronda anterior">◀</button>
+        <div class="round-badge" id="roundBadge">R0</div>
+        <button id="nextRound" aria-label="Ronda siguiente">▶</button>
+      </div>
+      <div class="phases" id="phases" role="group" aria-label="Fase de la ronda"></div>
+      <div class="clock">
+        <svg class="ring" id="miniRing" viewBox="0 0 46 46" aria-hidden="true"><circle class="bgc" cx="23" cy="23" r="19" fill="none" stroke-width="6"/><circle class="fgc" cx="23" cy="23" r="19" fill="none" stroke-width="6" stroke-linecap="round" transform="rotate(-90 23 23)" stroke-dasharray="119.4" stroke-dashoffset="119.4"/></svg>
+        <span class="t" id="clockT">0:00</span>
+        <button id="tStop" class="ghost" title="Detener el cronómetro">Pausar reloj</button>
+      </div>
+    </div>
+    <div class="guide" id="guide"></div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+  </header>
+  <section class="desk" id="desk-mercado" hidden></section>
+  <section class="desk" id="desk-broker" hidden></section>
+  <section class="desk" id="desk-equipos" hidden></section>
+  <section class="desk" id="desk-puntaje" hidden></section>
+  <section class="desk" id="desk-registro" hidden></section>
+  <section class="desk" id="desk-ajustes" hidden></section>
 </div>
-<footer>iKruger · Diagnóstico de Madurez Digital · 2025-2026</footer>
+<div class="toast" id="toast" hidden></div>
+<div class="tip" id="tip" hidden></div>
 
 <script>
-var RAW = JSON.parse(document.getElementById('dataScript').textContent);
-document.getElementById('orgCount').textContent = RAW.length + ' organizaciones';
+(function(){
+"use strict";
+/* ---------- Game data (facilitation guide v2) ---------- */
+const ASSETS=[
+ {k:"S",n:"BanKruger",sym:"BKR",risk:"Bajo",c:"var(--a1)"},
+ {k:"G",n:"Green Future",sym:"GRN",risk:"Medio",c:"var(--a2)"},
+ {k:"N",n:"Kaiman AI",sym:"KAI",risk:"Medio–alto",c:"var(--a3)"},
+ {k:"O",n:"GameOn",sym:"GAME",risk:"Alto",c:"var(--a4)"},
+ {k:"K",n:"Krugs",sym:"KRG",risk:"Muy alto",c:"var(--a5)"}];
+const PRICES={S:[100,101,102,103,105,106,107,130],G:[150,165,168,162,135,162,173,285],N:[100,115,118,113,90,117,125,165],O:[85,81,83,87,65,74,78,38],K:[10,11,14,8,5,35,7,100000]};
+const ROUNDS=[
+ {t:"Arma tu portafolio",tag:"Inicio",news:"Cada activo tiene su propio precio. Repartan su capital de $10.000: máximo 50% en un solo activo."},
+ {t:"Mercado normal",tag:"Normal",news:"Kaiman AI anuncia crecimiento de ventas. Green Future consigue un contrato internacional."},
+ {t:"FOMO",tag:"FOMO",news:"Un influencer con millones de seguidores afirma que Krugs podría multiplicarse ×10."},
+ {t:"Fake news",tag:"Fake news",news:"La información sobre Krugs no pudo verificarse. El influencer compró Krugs antes de recomendarlo y vendió en el pico."},
+ {t:"Crash",tag:"Crash",news:"Los mercados internacionales entran en fuerte corrección. Los activos de riesgo caen de forma generalizada."},
+ {t:"Recuperación",tag:"Rebote",news:"Los mercados recuperan parte de las pérdidas. Kaiman AI publica resultados mejores de lo esperado."},
+ {t:"Cierre",tag:"Cierre",news:"Última ronda de negociación. Después de esta ronda el mercado cierra."},
+ {t:"5 años después",tag:"+5 años",news:"Han pasado cinco años. No se negocia: miren qué valdría hoy su portafolio de cierre."}];
+const CARDS={1:["FUENTE OFICIAL","“Green Future confirma contrato internacional en comunicado corporativo.”","Se cumple: Green sube a $168 en R2."],
+ 2:["RUMOR","“Se comenta que GameOn podría lanzar un título sorpresa.”","Acierta por casualidad: GameOn sube a $87 en R3 y cae a $65 en R4."],
+ 3:["ALARMA","“Varios usuarios están vendiendo. No existe aún explicación confirmada.”","Dato incompleto que anticipaba el crash de R4."],
+ 4:["DATO","“Kaiman AI reporta crecimiento de ventas del 30%.”","Fundamento sólido en medio del pánico: Kaiman pasa de $90 a $117."]};
+const FLASH={0:"“Cada operación debe responder una pregunta: ¿por qué estamos haciendo esto?”",2:"“Quien tiene Krugs desde el inicio va +40%. ¿Cuánto es suficiente?”",3:"“¿Quién ganó con el rumor? El que lo publicó. Él ya tenía Krugs.”",4:"“No miren solo quién perdió más. Miren quién perdió menos y por qué.”",5:"“¿Quién vendió en el piso? ¿Qué pasó después?”",6:"“Expliquen una decisión que repetirían y una que cambiarían.”",7:"“Han pasado cinco años. ¿Qué portafolio sigue en pie?”"};
+const PHASES=[["noticia","Noticia"],["analisis","Análisis"],["abierto","Mercado abierto"],["cerrado","Registro"]];
+const GUIDE={
+ noticia:{todo:"Lee la noticia en voz alta con la pestaña Mercado proyectada. Los precios que ven ya incluyen el efecto de la noticia.",btn:"Empezar análisis · 60 s",cls:"primary"},
+ analisis:{todo:"Los equipos discuten durante 60 segundos. Todavía nadie entrega tickets.",btn:"Abrir mercado · 45 s",cls:"pop"},
+ abierto:{todo:"Los Traders dejan sus tickets en el buzón. Al llegar a 0:00 el mercado se cierra solo.",btn:"Cerrar mercado ahora",cls:"danger"},
+ cerrado:{todo:"Mercado cerrado: no se aceptan tickets nuevos. Registra en la Mesa del Broker los tickets del buzón y luego pasa a la siguiente ronda.",btn:"Siguiente ronda",cls:"primary"}};
+const anaSec=()=>S.settings.analysisSec||60, mktSec=()=>S.settings.marketSec||300;
+const dur=sec=>sec%60===0?(sec/60)+" min":sec>=60?Math.floor(sec/60)+" min "+(sec%60)+" s":sec+" s";
+const CAPITAL=10000, KEY="smc-broker-v1";
 
-var DIMS = ["Liderazgo y Estrategia","Procesos y Operaciones","Tecnología e Infraestructura","Datos e Información","Cultura y Capacidades"];
-var COLORS = ["#1a4a7a","#e8b84b","#27ae60","#e74c3c","#8e44ad"];
-var radarInst=null, barDimInst=null, compInst=null;
+/* ---------- State ---------- */
+function freshState(n){return {round:0,phase:"noticia",teams:Array.from({length:n||6},(_,i)=>({id:"t"+(i+1),name:"Equipo "+(i+1)})),trades:[],seq:0,settings:{fee:10,cap:50,inflation:5,bonus:true,requireRM:true,analysisSec:60,marketSec:300},decision:{},hideRank:true,tab:"broker",focusTeam:null}}
+let S;try{S=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){S=null}
+if(!S||!S.teams)S=freshState(6);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const maxRound=()=>S.settings.bonus?7:6;
+const tradable=r=>r<=6;
+const price=(k,r)=>PRICES[k][Math.min(r,7)];
 
-function lvl(s){
-  if(s<1.8) return {t:"Inicial",c:"lvl-1"};
-  if(s<2.6) return {t:"Emergente",c:"lvl-2"};
-  if(s<3.4) return {t:"En Desarrollo",c:"lvl-3"};
-  if(s<4.2) return {t:"Establecido",c:"lvl-4"};
-  return {t:"Avanzado",c:"lvl-5"};
-}
-function scol(s){if(s<=1)return "sc1";if(s<=2)return "sc2";if(s<=3)return "sc3";if(s<=4)return "sc4";return "sc5";}
-function pct(s){return Math.round((s-1)/4*100);}
+/* ---------- Ledger ---------- */
+function ledger(teamId,upto){
+  const L={cash:CAPITAL,h:{},cost:{},fees:0,n:0,bought:0,sold:0,realized:0};ASSETS.forEach(a=>{L.h[a.k]=0;L.cost[a.k]=0});
+  for(const t of S.trades){
+    if(t.team!==teamId||t.status!=="ejecutado"||t.round>upto)continue;
+    if(t.side==="BUY"){L.cash-=t.qty*t.price+t.fee;L.cost[t.asset]+=t.qty*t.price;L.h[t.asset]+=t.qty;L.bought+=t.qty*t.price}
+    else{const avg=L.h[t.asset]?L.cost[t.asset]/L.h[t.asset]:0;L.cash+=t.qty*t.price-t.fee;L.sold+=t.qty*t.price;L.realized+=(t.price-avg)*t.qty;L.cost[t.asset]-=avg*t.qty;L.h[t.asset]-=t.qty}
+    L.fees+=t.fee;L.n++}
+  return L}
+const holdVal=(L,r)=>ASSETS.reduce((s,a)=>s+L.h[a.k]*price(a.k,r),0);
+const worth=(L,r)=>L.cash+holdVal(L,r);
+const endWorth=(id,r)=>worth(ledger(id,Math.min(r,6)),r);
+function finalWorth(id){const L=ledger(id,6);return Math.round(L.cash*(1-S.settings.inflation/100)+holdVal(L,6))}
+function ddCrash(id){const L3=ledger(id,3);return pct(worth(L3,4),worth(L3,3))}
 
-// Populate selector
-var sel = document.getElementById('orgSel');
-for(var i=0;i<RAW.length;i++){
-  var o = document.createElement('option');
-  o.value = i; o.textContent = RAW[i].name;
-  sel.appendChild(o);
-}
+function check(o){
+  const r=S.round;
+  if(!tradable(r))return {ok:false,why:"La ronda de 5 años no se negocia."};
+  if(!o.team)return {ok:false,why:"Elige el equipo."};
+  if(!o.asset)return {ok:false,why:"Elige el activo."};
+  if(!Number.isInteger(o.qty)||o.qty<=0)return {ok:false,why:"La cantidad debe ser un número entero mayor que cero."};
+  if(S.settings.requireRM&&!o.rm)return {ok:false,why:"Falta la firma del Risk Manager."};
+  const L=ledger(o.team,r),p=price(o.asset,r),fee=S.settings.fee,gross=o.qty*p;
+  if(o.side==="BUY"){
+    if(L.cash<gross+fee)return {ok:false,why:`Efectivo insuficiente: necesita $${fmt(gross+fee)} y tiene $${fmt(L.cash)}.`};
+    const after=worth(L,r)-fee,pos=(L.h[o.asset]+o.qty)*p,pc=pos/after*100;
+    if(pc>S.settings.cap+1e-9)return {ok:false,why:`${an(o.asset)} quedaría en ${pc.toFixed(0)}% del patrimonio. El límite es ${S.settings.cap}%.`,pct:pc};
+    return {ok:true,cashAfter:L.cash-gross-fee,pct:pc}}
+  if(L.h[o.asset]<o.qty)return {ok:false,why:`Solo tiene ${L.h[o.asset]} unidades de ${an(o.asset)}.`};
+  if(L.cash+gross-fee<0)return {ok:false,why:"No alcanza para pagar la comisión."};
+  const avg=L.h[o.asset]?L.cost[o.asset]/L.h[o.asset]:0;
+  return {ok:true,cashAfter:L.cash+gross-fee,pnl:(p-avg)*o.qty}}
 
-function render(){
-  var idx = parseInt(sel.value);
-  var org = RAW[idx];
-  renderCards(org);
-  renderDimCards(org);
-  renderRadar(org);
-  renderBarDim(org);
-  renderDimTable(org);
-  renderQSections(org);
-}
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const fmt=n=>Math.round(n).toLocaleString("es-EC");
+const kfmt=n=>{const v=Math.abs(n);if(v>=1e6)return (n/1e6).toFixed(n%1e6===0?0:1).replace(".",",")+"M";if(v>=1000)return (n/1000).toFixed(n%1000===0?0:1).replace(".",",")+"K";return String(Math.round(n))};
+const A=k=>ASSETS.find(a=>a.k===k);
+const an=k=>A(k).n;
+const tn=id=>(S.teams.find(t=>t.id===id)||{name:"?"}).name;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct=(a,b)=>b?((a-b)/b*100):0;
+const sign=v=>(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(1).replace(".",",")+"%";
+const pctLabel=v=>v>=1000?"×"+fmt(1+v/100):sign(v);
+const chgCls=v=>v>0.05?"u":v<-0.05?"d":"z";
+const arrow=v=>v>0.05?"▲":v<-0.05?"▼":"■";
+let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+const tipAttr=html=>`data-tip="${esc(html)}"`;
+const swatch=c=>`<i class='sw' style='background:${c}'></i>`;
+function niceTicks(min,max,n){const span=max-min||1,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0)));const step=[1,2,2.5,5,10].map(m=>m*mag).find(s=>span/s<=n)||10*mag;const lo=Math.floor(min/step)*step,hi=Math.ceil(max/step)*step;const t=[];for(let v=lo;v<=hi+1e-9;v+=step)t.push(+v.toFixed(6));return t}
 
-function renderCards(org){
-  var l = lvl(org.total);
-  var html = '';
-  html += '<div class="card"><div class="lbl">Puntaje Global</div><div class="val" style="color:#0a2342">'+org.total+'</div><div class="sub"><span class="badge '+l.c+'">'+l.t+'</span></div></div>';
-  html += '<div class="card"><div class="lbl">País</div><div class="val" style="font-size:1.1rem;padding-top:10px">'+org.pais+'</div></div>';
-  for(var d=0;d<org.dims.length;d++){
-    var dl = lvl(org.dims[d].avg);
-    html += '<div class="card"><div class="lbl" style="font-size:.7rem">'+DIMS[d]+'</div><div class="val" style="color:'+COLORS[d]+'">'+org.dims[d].avg+'</div><div class="sub"><span class="badge '+dl.c+'">'+dl.t+'</span></div></div>';
-  }
-  document.getElementById('cards').innerHTML = html;
-}
-
-function renderDimCards(org){
-  var html = '';
-  for(var d=0;d<org.dims.length;d++){
-    var p = pct(org.dims[d].avg);
-    html += '<div class="dim-card"><div class="dnm">'+DIMS[d]+'</div><div class="dval">'+org.dims[d].avg+'</div><span class="badge '+lvl(org.dims[d].avg).c+'">'+lvl(org.dims[d].avg).t+'</span><div class="bar-wrap"><div class="bar-fill" style="width:'+p+'%"></div></div></div>';
-  }
-  document.getElementById('dimCards').innerHTML = html;
-}
-
-function renderRadar(org){
-  if(radarInst){radarInst.destroy();}
-  var avgs = org.dims.map(function(d){return d.avg;});
-  var ctx = document.getElementById('radarChart').getContext('2d');
-  radarInst = new Chart(ctx,{
-    type:'radar',
-    data:{
-      labels:DIMS,
-      datasets:[{label:org.name,data:avgs,backgroundColor:'rgba(26,74,122,0.15)',borderColor:'#1a4a7a',pointBackgroundColor:'#e8b84b',pointRadius:5,borderWidth:2}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:1,max:5,ticks:{stepSize:1,font:{size:10}},pointLabels:{font:{size:11}}}},plugins:{legend:{display:false}}}
+/* ---------- Chart: multi-line over rounds ---------- */
+function lineChart({series,upto,nCols,w=760,h=300,yfmt=v=>v,tipFn,events=true,highlight=null,band=null,R=104}){
+  const L=46,T=14,B=events?52:30,iw=w-L-R,ih=h-T-B;
+  const vis=[];series.forEach(s=>s.vals.slice(0,upto+1).forEach(v=>vis.push(v)));
+  if(band)vis.push(band);
+  let mn=Math.min(...vis),mx=Math.max(...vis);if(mx-mn<10){mn-=5;mx+=5}
+  const logS=mn>0&&mx/mn>40;
+  let ticks,y0,y1,Y;const X=i=>L+(nCols===1?iw/2:i*iw/(nCols-1));
+  if(logS){const a=Math.floor(Math.log10(mn)),b2=Math.ceil(Math.log10(mx));ticks=[];for(let e=a;e<=b2;e++)ticks.push(Math.pow(10,e));y0=a;y1=b2;Y=v=>T+ih-(Math.log10(Math.max(v,1e-9))-y0)/(y1-y0||1)*ih}
+  else{ticks=niceTicks(mn,mx,4);y0=ticks[0];y1=ticks[ticks.length-1];Y=v=>T+ih-(v-y0)/(y1-y0)*ih}
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img">`;
+  const colW=iw/(nCols-1||1);
+  if(logS)g+=`<text x="${L}" y="${T-2}" style="font-size:10.5px;font-weight:700">Escala logarítmica: cada línea es ×10</text>`;
+  g+=`<rect class="now" x="${X(upto)-colW/2}" y="${T}" width="${colW}" height="${ih}" rx="8"/>`;
+  ticks.forEach(t=>{g+=`<line class="grid" x1="${L}" x2="${L+iw}" y1="${Y(t)}" y2="${Y(t)}"/><text class="mono" x="${L-8}" y="${Y(t)+4}" text-anchor="end">${yfmt(t)}</text>`});
+  if(band){g+=`<line x1="${L}" x2="${L+iw}" y1="${Y(band)}" y2="${Y(band)}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="0" opacity=".55"/><text x="${L+6}" y="${Y(band)-6}" class="ink" style="font-size:11px;font-weight:700">Inicio</text>`}
+  for(let i=0;i<nCols;i++){g+=`<text x="${X(i)}" y="${T+ih+18}" text-anchor="middle" class="${i===upto?"ink":""}" style="font-weight:${i===upto?700:500}">R${i}</text>`;
+    if(events)g+=`<text x="${X(i)}" y="${T+ih+34}" text-anchor="middle" style="font-size:10.5px">${ROUNDS[i].tag}</text>`}
+  const ordered=highlight?[...series].sort((a,b)=>(a.id===highlight)-(b.id===highlight)):series;
+  const ends=[];
+  ordered.forEach(s=>{
+    const v=s.vals.slice(0,upto+1);const dim=highlight&&s.id!==highlight;
+    const col=dim?"var(--cash)":s.color;
+    if(v.length>1){const pts=v.map((x,i)=>X(i).toFixed(1)+","+Y(x).toFixed(1)).join(" ");
+      if(!dim&&series.length===1)g+=`<polygon points="${X(0)},${T+ih} ${pts} ${X(v.length-1)},${T+ih}" fill="${col}" fill-opacity=".1"/>`;
+      g+=`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${dim?2:3}" stroke-linejoin="round" stroke-linecap="round" ${dim?'opacity=".7"':""}/>`}
+    const lx=X(v.length-1),ly=Y(v[v.length-1]);
+    g+=`<circle cx="${lx}" cy="${ly}" r="5.5" fill="${col}" stroke="var(--surface)" stroke-width="2.5"/>`;
+    if(!dim)ends.push({y:ly,x:lx,label:s.short||s.name,val:s.vals[v.length-1]});
   });
+  ends.sort((a,b)=>a.y-b.y);for(let i=1;i<ends.length;i++)if(ends[i].y-ends[i-1].y<15)ends[i].y=ends[i-1].y+15;
+  ends.forEach(e=>{g+=`<text x="${L+iw+10}" y="${e.y+4}" class="ink" style="font-weight:700;font-size:12px">${esc(e.label)} <tspan class="mono" style="fill:var(--muted);font-weight:500">${yfmt(e.val)}</tspan></text>`});
+  for(let i=0;i<=upto;i++){g+=`<rect class="hit" x="${X(i)-colW/2}" y="${T}" width="${colW}" height="${ih}" rx="8" ${tipAttr(tipFn(i))}/>`}
+  return g+`</svg>`}
+
+/* ---------- Chart: diverging horizontal bars ---------- */
+function divergingBars(items,{w=520,rowH=40,fmtv=pctLabel}={}){
+  const L=118,R=78,iw=w-L-R,h=items.length*rowH+24;
+  const m=Math.min(100,Math.max(5,...items.map(i=>Math.abs(i.v))));const lim=Math.ceil(m/5)*5;
+  const X=v=>L+iw/2+v/lim*iw/2;
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img">`;
+  [-lim,-lim/2,0,lim/2,lim].forEach(t=>{g+=`<line class="${t===0?"base":"grid"}" x1="${X(t)}" x2="${X(t)}" y1="4" y2="${h-20}"/><text class="mono" x="${X(t)}" y="${h-4}" text-anchor="middle">${t>0?"+":""}${t}%</text>`});
+  items.forEach((it,i)=>{const y=6+i*rowH,bh=Math.min(24,rowH-12),x0=X(0),x1=X(Math.max(-lim,Math.min(lim,it.v))),bx=Math.min(x0,x1),bw=Math.max(2,Math.abs(x1-x0));
+    g+=`<text x="${L-12}" y="${y+bh/2+4}" text-anchor="end" class="ink" style="font-weight:700">${esc(it.name)}</text>`;
+    g+=`<rect x="${bx}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="${it.color}" ${tipAttr(`<b>${esc(it.name)}</b><br>${fmtv(it.v)}${it.extra?"<br>"+it.extra:""}`)}/>`;
+    g+=`<text class="mono ink" x="${w-4}" y="${y+bh/2+4}" text-anchor="end" style="font-weight:700">${fmtv(it.v)}</text>`});
+  return g+`</svg>`}
+
+/* ---------- Chart: stacked columns per round ---------- */
+function stackColumns(cols,{w=340,h=170,yMax}){
+  const L=34,R=6,T=10,B=22,iw=w-L-R,ih=h-T-B,n=cols.length;
+  const mx=yMax||Math.max(...cols.map(c=>c.total),1);const ticks=niceTicks(0,mx,3);const top=ticks[ticks.length-1];
+  const Y=v=>T+ih-v/top*ih,band=iw/Math.max(n,7),bw=Math.min(26,band*.62);
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img">`;
+  ticks.forEach(t=>{g+=`<line class="grid" x1="${L}" x2="${L+iw}" y1="${Y(t)}" y2="${Y(t)}"/><text class="mono" x="${L-5}" y="${Y(t)+4}" text-anchor="end" style="font-size:10px">${kfmt(t)}</text>`});
+  const cy=Y(CAPITAL);g+=`<line x1="${L}" x2="${L+iw}" y1="${cy}" y2="${cy}" stroke="var(--ink)" stroke-width="1" opacity=".5"/>`;
+  cols.forEach((c,i)=>{const cx=L+band*i+band/2;let acc=0;
+    c.segs.forEach((s,j)=>{if(s.v<=0)return;const y=Y(acc+s.v),hh=Y(acc)-Y(acc+s.v);const isTop=j===c.segs.map((q,qi)=>q.v>0?qi:-1).reduce((a,b)=>Math.max(a,b));
+      g+=`<rect x="${cx-bw/2}" y="${y+1}" width="${bw}" height="${Math.max(0,hh-2)}" ${isTop?'rx="4"':'rx="1"'} fill="${s.c}"/>`;acc+=s.v});
+    g+=`<rect class="hit" x="${cx-band/2}" y="${T}" width="${band}" height="${ih}" rx="6" ${tipAttr(c.tip)}/>`;
+    g+=`<text x="${cx}" y="${h-6}" text-anchor="middle" style="font-size:10.5px;font-weight:${c.cur?700:500}" class="${c.cur?"ink":""}">R${c.r}</text>`});
+  return g+`</svg>`}
+
+/* ---------- Chart: donut ---------- */
+function donut(segs,{size=120,label,sub}){
+  const r=size/2-10,C=2*Math.PI*r,tot=segs.reduce((s,x)=>s+x.v,0)||1;let off=0;
+  let g=`<svg class="chart" viewBox="0 0 ${size} ${size}" role="img"><g transform="rotate(-90 ${size/2} ${size/2})">`;
+  g+=`<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--sunk)" stroke-width="16"/>`;
+  segs.forEach(s=>{if(s.v<=0)return;const len=s.v/tot*C,gap=segs.filter(x=>x.v>0).length>1?2:0;
+    g+=`<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.c}" stroke-width="16" stroke-dasharray="${Math.max(0,len-gap)} ${C}" stroke-dashoffset="${-off}" ${tipAttr(`<b>${esc(s.n)}</b><br>$${fmt(s.v)} · ${(s.v/tot*100).toFixed(0)}%`)}/>`;off+=len});
+  g+=`</g><text x="${size/2}" y="${size/2+2}" text-anchor="middle" class="mono ink" style="font-size:15px;font-weight:700">${label}</text><text x="${size/2}" y="${size/2+18}" text-anchor="middle" style="font-size:10px">${sub}</text></svg>`;return g}
+
+/* ---------- Chart: horizontal bars (ranking / scores) ---------- */
+function hBars(rows,{w=620,rowH=38,max,fmtv=v=>"$"+fmt(v),ref}){
+  const L=150,R=86,iw=w-L-R,h=rows.length*rowH+8;const mx=max||Math.max(...rows.map(r=>r.total),1);
+  let g=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img">`;
+  if(ref){const rx=L+ref/mx*iw;g+=`<line x1="${rx}" x2="${rx}" y1="0" y2="${h}" stroke="var(--ink)" stroke-width="1" opacity=".5"/>`}
+  rows.forEach((r,i)=>{const y=4+i*rowH,bh=Math.min(24,rowH-12);let x=L;
+    g+=`<text x="${L-12}" y="${y+bh/2+4}" text-anchor="end" class="ink" style="font-weight:700">${esc(r.name)}</text>`;
+    const segs=r.segs.filter(s=>s.v>0);
+    segs.forEach((s,j)=>{const ww=s.v/mx*iw;g+=`<rect x="${x}" y="${y}" width="${Math.max(0,ww-(j<segs.length-1?2:0))}" height="${bh}" rx="${j===segs.length-1?5:1}" fill="${s.c}" ${tipAttr(`<b>${esc(r.name)}</b><br>${esc(s.n)}: ${s.label||s.v}`)}/>`;x+=ww});
+    g+=`<text class="mono ink" x="${x+8}" y="${y+bh/2+4}" style="font-weight:700">${fmtv(r.total)}</text>`});
+  return g+`</svg>`}
+
+/* ---------- Clock ---------- */
+let clockEnd=0,clockDur=0,clockIv=null;
+function startClock(sec,phase){clockDur=sec;clockEnd=Date.now()+sec*1000;if(phase)setPhase(phase);clearInterval(clockIv);clockIv=setInterval(tick,200);tick()}
+function stopClock(){clearInterval(clockIv);clockIv=null;clockEnd=0;tick()}
+function tick(){
+  const leftMs=Math.max(0,clockEnd-Date.now()),left=Math.ceil(leftMs/1000);
+  const txt=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");const low=!!clockIv&&left<=(clockDur>=120?30:10);
+  const frac=clockDur&&clockIv?leftMs/(clockDur*1000):0;
+  document.querySelectorAll("[data-clock]").forEach(e=>e.textContent=txt);
+  $("#clockT").textContent=txt;$("#clockT").classList.toggle("low",low);
+  const mr=$("#miniRing");mr.classList.toggle("low",low);mr.querySelector(".fgc").setAttribute("stroke-dashoffset",(119.4*(1-frac)).toFixed(1));
+  const br=document.querySelector(".bigring");if(br){br.classList.toggle("low",low);br.querySelector(".fgc").setAttribute("stroke-dashoffset",(408.4*(1-frac)).toFixed(1))}
+  if(clockIv&&left===0){clearInterval(clockIv);clockIv=null;if(S.phase==="abierto"){setPhase("cerrado");toast("Mercado cerrado. Ahora registra los tickets del buzón.")}else if(S.phase==="analisis"){toast("Terminó el análisis. Abre el mercado.")}}
 }
 
-function renderBarDim(org){
-  if(barDimInst){barDimInst.destroy();}
-  var avgs = org.dims.map(function(d){return d.avg;});
-  var ctx = document.getElementById('barDimChart').getContext('2d');
-  barDimInst = new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels:DIMS,
-      datasets:[{label:'Promedio',data:avgs,backgroundColor:COLORS,borderRadius:6}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:1,max:5,ticks:{stepSize:1}}},plugins:{legend:{display:false}}}
-  });
-}
+/* ---------- Strip ---------- */
+const TABS=[["mercado","Mercado"],["broker","Mesa del Broker"],["equipos","Equipos"],["puntaje","Puntaje"],["registro","Registro"],["ajustes","Ajustes"]];
+function renderStrip(){
+  $("#roundBadge").textContent="R"+S.round;
+  $("#prevRound").disabled=S.round===0;$("#nextRound").disabled=S.round>=maxRound();
+  $("#phases").innerHTML=PHASES.map(([k,l])=>`<button class="phase ${k==="abierto"?"open":k==="cerrado"?"closed":""}" data-ph="${k}" aria-pressed="${S.phase===k}">${l}</button>`).join("");
+  const idx=PHASES.findIndex(p=>p[0]===S.phase),G=GUIDE[S.phase];
+  const last=S.round>=maxRound(),bonus=S.round===7;
+  const btn=S.phase==="cerrado"?(last?"Ver puntaje final":"Siguiente ronda → R"+(S.round+1)):S.phase==="noticia"?"Empezar análisis · "+dur(anaSec()):S.phase==="analisis"?"Abrir mercado · "+dur(mktSec()):G.btn;
+  const todo=S.phase==="analisis"?`Los equipos discuten durante ${dur(anaSec())}. Todavía nadie entrega tickets.`:S.phase==="abierto"?`El mercado está abierto ${dur(mktSec())}. Los Traders dejan sus tickets en el buzón; al llegar a 0:00 se cierra solo.`:G.todo;
+  $("#guide").innerHTML=bonus?`<div class="todo"><b>Ronda bonus · 5 años después</b>No se negocia. Muestra el gráfico de Mercado y pregunta qué portafolio sigue en pie.</div><button class="primary next" data-go="puntaje">Ver puntaje final</button>`:
+   `<div class="steps" role="list" aria-label="Pasos de la ronda">${PHASES.map(([k,l],i)=>`${i?'<span class="sep"></span>':""}<button role="listitem" class="step ${k==="abierto"?"open":k==="cerrado"?"closed":""} ${i<idx?"done":""}" data-ph="${k}" ${i===idx?'aria-current="step"':""} title="Ir a este paso">${'<span class="n">'+(i<idx?"✓":i+1)+"</span>"}${l}</button>`).join("")}</div>
+    <div class="todo"><b>Paso ${idx+1} de 4 · qué hacer ahora</b>${todo}</div>
+    <button class="${G.cls} next" id="nextStep">${btn}</button>`;
+  $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${l}</button>`).join("");
+  TABS.forEach(([k])=>$("#desk-"+k).hidden=S.tab!==k)}
+function setPhase(p){S.phase=p;save();render()}
 
-function renderDimTable(org){
-  var html = '<table><thead><tr><th>Dimensión</th><th>Promedio</th><th>Nivel</th></tr></thead><tbody>';
-  for(var d=0;d<org.dims.length;d++){
-    var l = lvl(org.dims[d].avg);
-    html += '<tr><td>'+DIMS[d]+'</td><td><strong>'+org.dims[d].avg+'</strong></td><td><span class="badge '+l.c+'">'+l.t+'</span></td></tr>';
-  }
-  html += '</tbody></table>';
-  document.getElementById('dimTable').innerHTML = html;
-}
+/* ---------- Mercado ---------- */
+function priceTip(i){return `<b>Ronda ${i} · ${ROUNDS[i].tag}</b>`+ASSETS.map(a=>`<div class='r'><span>${swatch(a.c)}${a.n}</span><b>$${fmt(price(a.k,i))}</b></div>`).join("")}
+function renderMercado(){
+  const r=S.round,R=ROUNDS[r],nCols=maxRound()+1;
+  const flag=S.phase==="abierto"?["open","Mercado abierto"]:S.phase==="cerrado"?["closed","Mercado cerrado"]:S.phase==="analisis"?["idle","Analicen"]:["idle","Noticia"];
+  const tickers=ASSETS.map(a=>{const p=price(a.k,r),prev=r?price(a.k,r-1):p,ch=pct(p,prev);
+    const v=PRICES[a.k].slice(0,r+1),mn=Math.min(...PRICES[a.k].slice(0,nCols)),mx=Math.max(...PRICES[a.k].slice(0,nCols));
+    const X=i=>4+i*(212/(nCols-1)),Y=x=>42-(x-mn)/((mx-mn)||1)*38;
+    const sp=v.length>1?`<svg viewBox="0 0 220 46" aria-hidden="true"><polygon points="${X(0)},46 ${v.map((x,i)=>X(i)+","+Y(x)).join(" ")} ${X(v.length-1)},46" fill="${a.c}" fill-opacity=".12"/><polyline points="${v.map((x,i)=>X(i)+","+Y(x)).join(" ")}" fill="none" stroke="${a.c}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="4.5" fill="${a.c}" stroke="var(--surface)" stroke-width="2"/></svg>`:`<svg viewBox="0 0 220 46" aria-hidden="true"><line x1="4" x2="216" y1="23" y2="23" stroke="${a.c}" stroke-width="2.5" stroke-dasharray="2 6" stroke-linecap="round"/></svg>`;
+    return `<div class="card ticker" style="--c:${a.c}"><div class="ticker-top"></div><div class="ticker-body">
+      <div class="sym"><b>$${a.sym}</b><span class="lbl">Riesgo ${a.risk}</span></div>
+      <div class="nm">${a.n}</div><div class="px" style="${p>=10000?"font-size:clamp(26px,2.6vw,36px)":""}">$${fmt(p)}</div>
+      <span class="chg ${r?chgCls(ch):"z"}">${r?arrow(ch)+" "+pctLabel(ch):"Precio inicial"}</span>${sp}
+      <div class="muted num" style="font-size:12px">Desde el inicio ${pctLabel(pct(p,PRICES[a.k][0]))}</div></div></div>`}).join("");
+  const moves=r?divergingBars(ASSETS.map(a=>({name:a.n,color:a.c,v:pct(price(a.k,r),price(a.k,r-1)),extra:`$${fmt(price(a.k,r-1))} → $${fmt(price(a.k,r))}`}))):`<div class="empty">En la Ronda 0 todos los activos valen $100. Desde la Ronda 1 aquí verás cuánto se movió cada uno.</div>`;
+  const line=lineChart({series:ASSETS.map(a=>({id:a.k,name:a.n,short:a.sym,color:a.c,vals:PRICES[a.k].slice(0,nCols)})),upto:r,nCols,yfmt:v=>"$"+kfmt(v),tipFn:priceTip});
+  // heatmap
+  let heat=`<div class="heat" style="grid-template-columns:130px repeat(${nCols-1},minmax(0,1fr))"><div></div>`;
+  for(let i=1;i<nCols;i++)heat+=`<div class="h">R${i}<br><span style="font-weight:500">${ROUNDS[i].tag}</span></div>`;
+  ASSETS.forEach(a=>{heat+=`<div class="rn">${swatch(a.c)}${a.n}</div>`;
+    for(let i=1;i<nCols;i++){const ch=pct(price(a.k,i),price(a.k,i-1));
+      if(i>r){heat+=`<div class="cell fut">?</div>`;continue}
+      const mag=Math.min(1,Math.abs(ch)/40),col=ch>=0?"var(--up)":"var(--down)";
+      heat+=`<div class="cell ${i===r?"cur":""}" style="background:color-mix(in oklab, ${col} ${Math.round(12+mag*70)}%, var(--surface));${mag>.55?"color:#fff":""}" ${tipAttr(`<b>${a.n} · R${i}</b><br>$${fmt(price(a.k,i-1))} → $${fmt(price(a.k,i))}<br>${sign(ch)}`)} tabindex="0">${pctLabel(ch)}</div>`}});
+  heat+=`</div>`;
+  let rank="";
+  if(!S.hideRank){const rows=S.teams.map(t=>{const L=ledger(t.id,Math.min(r,6)),rr=r;return {name:t.name,total:worth(L,rr),segs:[...ASSETS.map(a=>({n:a.n,c:a.c,v:L.h[a.k]*price(a.k,rr),label:"$"+fmt(L.h[a.k]*price(a.k,rr))})),{n:"Efectivo",c:"var(--cash)",v:Math.max(0,L.cash),label:"$"+fmt(L.cash)}]}}).sort((a,b)=>b.total-a.total);
+    rank=`<div class="card" style="margin-top:18px"><div class="card-h"><h2>Carrera de patrimonio · R${r}</h2><div class="legend">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.n}</span>`).join("")}<span>${swatch("var(--cash)")}Efectivo</span><span><i class="sw" style="background:var(--ink);width:2px;height:12px"></i>Capital inicial</span></div></div><div class="chartwrap">${hBars(rows,{w:760,ref:CAPITAL,max:Math.max(...rows.map(x=>x.total),CAPITAL)*1.05})}</div></div>`}
+  $("#desk-mercado").innerHTML=`
+   <div class="hero"><div class="hero-main"><div class="lbl">Ronda ${r}${r===7?" · bonus":""} de ${maxRound()}</div><h1>${R.t}</h1><div class="newsbox">${esc(R.news)}</div></div>
+     <div class="card statebox"><div class="bigring" id="bigRing"><svg viewBox="0 0 150 150" aria-hidden="true"><circle class="bgc" cx="75" cy="75" r="65" fill="none" stroke-width="14"/><circle class="fgc" cx="75" cy="75" r="65" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="408.4" stroke-dashoffset="408.4"/></svg><div class="t" data-clock>0:00</div></div><span class="flag ${flag[0]}">${flag[1]}</span></div></div>
+   <div class="tickers">${tickers}</div>
+   <div class="cols-2">
+     <div class="card"><div class="card-h"><h2>Así se movió esta ronda</h2><p>Variación de cada activo respecto a R${Math.max(0,r-1)}</p></div><div class="chartwrap">${moves}</div></div>
+     <div class="card"><div class="card-h"><h2>Mapa de calor</h2><p>Verde sube, rojo baja; más intenso, más fuerte</p></div><div class="chartwrap">${heat}</div></div>
+   </div>
+   <div class="card" style="margin-top:18px"><div class="card-h"><h2>El mercado ronda a ronda</h2><div class="legend">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.n}</span>`).join("")}</div></div><div class="chartwrap">${line}</div></div>
+   ${rank}
+   <div class="toolbar" style="margin-top:16px"><button id="toggleRank" class="${S.hideRank?"pop":""}">${S.hideRank?"Mostrar carrera de patrimonio":"Ocultar carrera de patrimonio"}</button><span class="muted" style="font-size:13px">El precio publicado ya incorpora la noticia. Todas las órdenes se ejecutan a este precio.</span></div>`}
 
-function renderQSections(org){
-  var html = '';
-  for(var d=0;d<org.dims.length;d++){
-    var dim = org.dims[d];
-    html += '<div class="section"><h3>'+DIMS[d]+' — Promedio: '+dim.avg+'</h3>';
-    // Bar chart
-    html += '<div style="position:relative;height:220px;margin-bottom:14px"><canvas id="qbar'+d+'"></canvas></div>';
-    // Question list
-    for(var q=0;q<dim.scores.length;q++){
-      var sc = dim.scores[q];
-      html += '<div class="q-row"><div class="q-txt">'+dim.labels[q]+'</div><div class="q-score '+scol(sc)+'">'+sc+'</div></div>';
-    }
-    html += '</div>';
-  }
-  document.getElementById('qSections').innerHTML = html;
-  // Draw mini bar charts
-  for(var d=0;d<org.dims.length;d++){
-    var dim = org.dims[d];
-    var labels = dim.labels.map(function(l,i){return (d+1)+'.'+(i+1);});
-    var ctx2 = document.getElementById('qbar'+d).getContext('2d');
-    new Chart(ctx2,{
-      type:'bar',
-      data:{labels:labels,datasets:[{data:dim.scores,backgroundColor:COLORS[d],borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:1,max:5}},plugins:{legend:{display:false}}}
-    });
-  }
-}
+/* ---------- Broker ---------- */
+let T={team:null,side:"BUY",asset:null,qty:"",reason:"",rm:false};
+function compSegs(L,r){return [...ASSETS.map(a=>({n:a.n,c:a.c,v:L.h[a.k]*price(a.k,r)})),{n:"Efectivo",c:"var(--cash)",v:Math.max(0,L.cash)}]}
+function stackbar(segs){const t=segs.reduce((s,x)=>s+x.v,0)||1;return `<div class="stackbar">${segs.filter(s=>s.v>0).map(s=>`<i style="width:${s.v/t*100}%;background:${s.c}" ${tipAttr(`<b>${esc(s.n)}</b><br>$${fmt(s.v)} · ${(s.v/t*100).toFixed(0)}%`)}></i>`).join("")}</div>`}
+function flowHTML(L,{compact=false}={}){
+  const top=CAPITAL+L.sold||1,pc=v=>(v/top*100).toFixed(2)+"%";
+  const c1=CAPITAL+L.sold,c2=c1-L.bought,c3=c2-L.fees;
+  const row=(sym,label,from,to,col,val,cls="")=>`<div class="fl ${cls}"><b>${sym}</b>${label}</div><div class="bar ${cls}"><i style="left:${pc(Math.min(from,to))};width:${pc(Math.abs(to-from))};background:${col}"></i></div><div class="fv ${cls}">${val}</div>`;
+  return `<div class="flow ${compact?"compact":""}">
+    ${row("","Capital inicial",0,CAPITAL,"var(--ink)","$"+fmt(CAPITAL))}
+    ${row("+","Recibido por ventas",CAPITAL,c1,"var(--up)","+$"+fmt(L.sold))}
+    ${row("−","Gastado en compras",c1,c2,"var(--down)","−$"+fmt(L.bought))}
+    ${row("−","Comisiones",c2,c3,"var(--warn)","−$"+fmt(L.fees))}
+    <div class="fl total"><b>=</b><strong>Efectivo disponible</strong></div><div class="bar total" style="border-top:none"><i style="left:0;width:${pc(Math.max(0,c3))};background:var(--cash)"></i></div><div class="fv total">$${fmt(L.cash)}</div>
+  </div>`}
+function positionsHTML(L,r){
+  const rows=ASSETS.filter(a=>L.h[a.k]>0).map(a=>{const val=L.h[a.k]*price(a.k,r),cost=L.cost[a.k],res=val-cost;
+    return `<tr><td><span class="tag">${swatch(a.c)}${a.sym}</span></td><td class="r num">${L.h[a.k]}</td><td class="r num">$${fmt(cost)}</td><td class="r num">$${fmt(val)}</td><td class="r num ${res>=0.5?"up":res<=-0.5?"down":""}">${res>=0.5?"+":res<=-0.5?"−":""}$${fmt(Math.abs(res))}</td></tr>`}).join("");
+  if(!rows)return `<div class="muted" style="font-size:13px">Todavía no tiene activos: todo su dinero está en efectivo.</div>`;
+  const tc=ASSETS.reduce((s2,a)=>s2+L.cost[a.k],0),tv=holdVal(L,r),tr=tv-tc;
+  return `<div class="tablewrap"><table class="poss"><thead><tr><th>Activo</th><th class="r">Unid.</th><th class="r">Pagó</th><th class="r">Vale hoy</th><th class="r">Gana / pierde</th></tr></thead><tbody>${rows}
+    <tr><td><b>Total</b></td><td></td><td class="r num"><b>$${fmt(tc)}</b></td><td class="r num"><b>$${fmt(tv)}</b></td><td class="r num ${tr>=0.5?"up":tr<=-0.5?"down":""}"><b>${tr>=0.5?"+":tr<=-0.5?"−":""}$${fmt(Math.abs(tr))}</b></td></tr></tbody></table></div>`}
+function walletCard(id,r){
+  const L=ledger(id,Math.min(r,6)),w=worth(L,r),cp=w?L.cash/w*100:0,ch=pct(w,CAPITAL);
+  return `<div class="card"><div class="wallet">
+    <div class="wallet-top"><div><div class="lbl">Billetera de ${esc(tn(id))} · efectivo disponible</div><div class="wbig">$${fmt(L.cash)}</div><div class="muted" style="font-size:13px">${cp.toFixed(0)}% de su patrimonio está en efectivo</div></div>
+      <div style="text-align:right"><div class="lbl">Patrimonio total</div><div class="wmid">$${fmt(w)}</div><span class="chg ${chgCls(ch)}">${arrow(ch)} ${sign(ch)} vs $10.000</span></div></div>
+    ${flowHTML(L)}
+    ${L.realized?`<div class="muted" style="font-size:13px">Con las ventas ya ${L.realized>=0?"ganó":"perdió"} <b class="num ${L.realized>=0?"up":"down"}">$${fmt(Math.abs(L.realized))}</b> frente a lo que había pagado.</div>`:""}
+    <div><div class="lbl" style="margin-bottom:4px">Lo que tiene en activos</div>${positionsHTML(L,r)}</div>
+  </div></div>`}
+function renderBroker(){
+  const r=S.round,can=tradable(r);
+  const c=check({team:T.team,side:T.side,asset:T.asset,qty:T.qty===""?NaN:Number(T.qty),rm:T.rm});
+  const chips=S.teams.map(t=>{const L=ledger(t.id,Math.min(r,6)),w=worth(L,r);return `<button class="teamchip" data-team="${t.id}" aria-pressed="${T.team===t.id}"><b>${esc(t.name)}</b><span class="lbl" style="font-size:10px">Disponible</span><span class="num" style="color:var(--ink);font-weight:700;font-size:18px;line-height:1">$${fmt(L.cash)}</span><span class="num">Patrimonio $${fmt(w)}</span>${stackbar(compSegs(L,r))}</button>`}).join("");
+  const assetBtns=ASSETS.map(a=>`<button type="button" style="--c:${a.c}" data-asset="${a.k}" aria-pressed="${T.asset===a.k}"><i></i>${a.n.split(" ")[0]}<small>$${fmt(price(a.k,r))}</small></button>`).join("");
+  const showV=T.team&&T.asset&&T.qty!=="";
+  let prev="";
+  if(!T.team)prev=`<div class="cashmove"><div class="muted" style="font-size:14px">Elige el equipo para ver cuánto efectivo tiene y cuánto le queda después de la orden.</div></div>`;
+  else{const L0=ledger(T.team,Math.min(r,6)),A0=L0.cash,q=Number(T.qty),ok=T.asset&&T.qty!==""&&q>0;
+    const p=T.asset?price(T.asset,r):0,gross=ok?q*p:0,fee=ok?S.settings.fee:0;
+    const B0=T.side==="BUY"?A0-gross-fee:A0+gross-fee;
+    let gauge,leg;
+    if(T.side==="BUY"){const spend=gross+fee,ref=Math.max(A0,spend)||1,over=spend>A0;
+      gauge=`<div class="gauge">${over?`<i class="stripe-out" style="width:100%"></i>`:`<i style="width:${Math.max(0,B0)/ref*100}%;background:var(--cash)"></i><i class="stripe-out" style="width:${spend/ref*100}%"></i>`}</div>`;
+      leg=`<span>${swatch("var(--cash)")}Le queda $${fmt(Math.max(0,B0))}</span><span><i class="sw stripe-out"></i>Usa $${fmt(spend)}${ok?` (${q} × $${fmt(p)} + $${fee} comisión)`:""}</span>${over?`<span class="down" style="font-weight:700">Le faltan $${fmt(spend-A0)}</span>`:""}`}
+    else{const inc=gross-fee,ref=Math.max(A0+Math.max(0,inc),1);
+      gauge=`<div class="gauge"><i style="width:${A0/ref*100}%;background:var(--cash)"></i><i class="stripe-in" style="width:${Math.max(0,inc)/ref*100}%"></i></div>`;
+      leg=`<span>${swatch("var(--cash)")}Tiene $${fmt(A0)}</span><span><i class="sw stripe-in"></i>Entran $${fmt(Math.max(0,inc))}${ok?` (${q} × $${fmt(p)} − $${fee} comisión)`:""}</span>`}
+    prev=`<div class="cashmove"><div class="cm-row"><div><div class="lbl">Efectivo ahora</div><div class="big">$${fmt(A0)}</div></div><div class="cm-arrow">→</div><div style="text-align:right"><div class="lbl">Después de la orden</div><div class="big ${B0<0?"down":""}">${B0<0?"−":""}$${fmt(Math.abs(B0))}</div></div></div>${gauge}<div class="gauge-legend">${leg}</div>
+      ${c.pnl!==undefined&&ok?`<div class="gauge-legend"><span>Con esta venta ${c.pnl>=0?"gana":"pierde"} <b class="num ${c.pnl>=0?"up":"down"}">&nbsp;$${fmt(Math.abs(c.pnl))}&nbsp;</b> frente a lo que pagó.</span></div>`:""}
+      ${c.pct!==undefined&&ok?`<div><div class="gauge-legend" style="justify-content:space-between"><span>Peso de ${an(T.asset)} tras la compra</span><b class="num" style="color:var(--ink)">${c.pct.toFixed(0)}% / límite ${S.settings.cap}%</b></div><div class="capbar"><i style="width:${Math.min(100,c.pct)}%;background:${c.pct>S.settings.cap?"var(--down)":A(T.asset).c}"></i><b style="left:${S.settings.cap}%"></b></div></div>`:""}
+    </div>`}
+  let held="";
+  if(T.team){const L=ledger(T.team,Math.min(r,6));held=ASSETS.filter(a=>L.h[a.k]).map(a=>`<span class="tag">${swatch(a.c)}${a.sym} ${L.h[a.k]}</span>`).join(" ")||'<span class="muted">Sin posiciones todavía.</span>'}
+  const card=CARDS[r];const recent=S.trades.filter(t=>t.round===r).slice(-8).reverse();
+  $("#desk-broker").innerHTML=`<div class="desk-cols">
+   <form class="card ticket" id="ticketForm" autocomplete="off">
+     <div><div class="lbl">Ticket · Ronda ${r}</div><h2 style="font-size:22px;margin-top:4px">${can?"Nueva orden":"Ronda sin negociación"}</h2></div>
+     ${can&&(S.phase==="noticia"||S.phase==="analisis")?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">El mercado de esta ronda aún no abre. Puedes registrar tickets, pero los equipos todavía no deberían entregarlos.</div>`:""}
+     ${can?"":`<div class="verdict no">La ronda de 5 años solo se revela. Vuelve a R6 para corregir órdenes.</div>`}
+     <div class="seg" role="group" aria-label="Operación"><button type="button" class="buy" data-side="BUY" aria-pressed="${T.side==="BUY"}">▲ Comprar</button><button type="button" class="sell" data-side="SELL" aria-pressed="${T.side==="SELL"}">▼ Vender</button></div>
+     <div><div class="lbl" style="margin-bottom:8px">Activo · precio de la ronda</div><div class="assetpick">${assetBtns}</div></div>
+     <div class="two"><label class="f"><span class="lbl">Cantidad</span><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="${esc(T.qty)}" placeholder="Unidades enteras"></label>
+       <label class="f"><span class="lbl">Equipo</span><select id="teamSel"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${T.team===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label></div>
+     <label class="f"><span class="lbl">Razón (1 línea)</span><input id="reason" type="text" maxlength="120" value="${esc(T.reason)}" placeholder="Ej.: Kaiman confirma ventas +30%"></label>
+     <label class="check"><input id="rm" type="checkbox" ${T.rm?"checked":""}> Firmado por el Risk Manager</label>
+     ${T.team?`<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="lbl">${esc(tn(T.team))} tiene</span>${held}</div>`:""}
+     ${prev}
+     ${showV?`<div class="verdict ${c.ok?"ok":"no"}">${c.ok?"✓ Orden válida. Lista para ejecutar.":"✕ "+esc(c.why)}</div>`:""}
+     <div class="toolbar"><button type="submit" class="primary" ${c.ok&&can?"":"disabled"}>Ejecutar orden</button><button type="button" id="rejectBtn" ${showV&&!c.ok&&can?"":"disabled"}>Registrar rechazo</button><button type="button" id="clearBtn" class="ghost">Limpiar</button></div>
+   </form>
+   <div class="grid">
+     ${T.team?walletCard(T.team,r):""}
+     <div class="card"><div class="card-h"><h2>${T.team?"Cambiar de equipo":"Elige el equipo"}</h2><div class="legend">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.sym}</span>`).join("")}<span>${swatch("var(--cash)")}Efectivo</span></div></div><div class="teamgrid">${chips}</div></div>
+     <div class="card flat"><div class="card-h"><h2>Órdenes de la Ronda ${r}</h2><p>${S.trades.filter(t=>t.round===r&&t.status==="ejecutado").length} ejecutadas · ${S.trades.filter(t=>t.round===r&&t.status!=="ejecutado").length} rechazadas</p></div>
+       ${recent.length?`<div class="tablewrap"><table><thead><tr><th>#</th><th>Equipo</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th>Estado</th></tr></thead><tbody>${recent.map(t=>`<tr><td class="num">${t.id}</td><td>${esc(tn(t.team))}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${t.price}</td><td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn" ${tipAttr(esc(t.why||""))}>Rechazada</span>`}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Todavía no hay órdenes en esta ronda. Las que registres aparecen aquí.</div>`}</div>
+     <details class="key"><summary>Clave del facilitador · Ronda ${r}</summary><div style="display:grid;gap:10px;margin-top:10px;font-size:14px">
+       ${card?`<div><span class="pill info">${card[0]}</span> Tarjeta privada para la mitad de los News Hunters: ${esc(card[1])}<br><span class="muted">Qué pasa después: ${esc(card[2])}</span></div>`:'<div class="muted">Esta ronda no tiene tarjeta privada.</div>'}
+       ${FLASH[r]?`<div><span class="pill ok">Pregunta flash</span> ${esc(FLASH[r])}</div>`:""}
+       ${r<maxRound()?`<div style="display:flex;flex-wrap:wrap;gap:6px"><span class="lbl" style="align-self:center">Próxima ronda</span>${ASSETS.map(a=>{const ch=pct(price(a.k,r+1),price(a.k,r));return `<span class="tag">${swatch(a.c)}${a.sym} $${fmt(price(a.k,r+1))} <span class="${ch>=0?"up":"down"}">${arrow(ch)}</span></span>`}).join("")}</div>`:""}
+     </div></details>
+   </div></div>`}
+function executeTicket(status,why){
+  const r=S.round,p=price(T.asset,r);S.seq++;
+  S.trades.push({id:S.seq,team:T.team,round:r,side:T.side,asset:T.asset,qty:Number(T.qty),price:p,fee:status==="ejecutado"?S.settings.fee:0,reason:T.reason.trim(),rm:T.rm,status,why:why||"",ts:Date.now()});save();
+  toast(status==="ejecutado"?`✓ ${tn(T.team)} ${T.side==="BUY"?"compra":"vende"} ${T.qty} ${an(T.asset)} a $${fmt(p)}`:`Rechazo registrado: ${why}`);
+  T={team:T.team,side:T.side,asset:null,qty:"",reason:"",rm:false};render()}
 
-function renderComp(){
-  if(compInst){compInst.destroy();}
-  var names = RAW.map(function(o){
-    var n = o.name.length>22 ? o.name.substring(0,22)+'…' : o.name;
-    return n;
-  });
-  var totals = RAW.map(function(o){return o.total;});
-  var bgColors = totals.map(function(t){
-    var l = lvl(t);
-    var map={'lvl-1':'#fca5a5','lvl-2':'#fcd34d','lvl-3':'#93c5fd','lvl-4':'#6ee7b7','lvl-5':'#c4b5fd'};
-    return map[l.c]||'#93c5fd';
-  });
-  var ctx3 = document.getElementById('compChart').getContext('2d');
-  compInst = new Chart(ctx3,{
-    type:'bar',
-    data:{labels:names,datasets:[{label:'Puntaje Total',data:totals,backgroundColor:bgColors,borderRadius:5}]},
-    options:{
-      indexAxis:'y',
-      responsive:true,maintainAspectRatio:false,
-      scales:{x:{min:1,max:5}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.raw+' — '+lvl(c.raw).t;}}}}
-    }
-  });
-  // Table
-  var sorted = RAW.slice().sort(function(a,b){return b.total-a.total;});
-  var thtml = '<table><thead><tr><th>#</th><th>Organización</th><th>País</th><th>Total</th>';
-  for(var d=0;d<5;d++) thtml += '<th style="font-size:.75rem">'+DIMS[d].split(' ')[0]+'</th>';
-  thtml += '<th>Nivel</th></tr></thead><tbody>';
-  for(var i=0;i<sorted.length;i++){
-    var o = sorted[i];
-    var l = lvl(o.total);
-    thtml += '<tr><td>'+(i+1)+'</td><td>'+o.name+'</td><td>'+o.pais+'</td><td><strong>'+o.total+'</strong></td>';
-    for(var d=0;d<5;d++) thtml += '<td>'+o.dims[d].avg+'</td>';
-    thtml += '<td><span class="badge '+l.c+'">'+l.t+'</span></td></tr>';
-  }
-  thtml += '</tbody></table>';
-  document.getElementById('compTable').innerHTML = thtml;
-}
+/* ---------- Equipos ---------- */
+function teamHistory(id,upto){const h=[];for(let i=0;i<=upto;i++)h.push(Math.round(endWorth(id,i)));return h}
+function renderEquipos(){
+  const r=S.round,nCols=maxRound()+1;
+  const series=S.teams.map(t=>({id:t.id,name:t.name,short:t.name,color:"var(--accent)",vals:teamHistory(t.id,nCols-1)}));
+  const focus=S.focusTeam&&S.teams.some(t=>t.id===S.focusTeam)?S.focusTeam:null;
+  const teamTip=i=>`<b>Ronda ${i} · ${ROUNDS[i].tag}</b>`+S.teams.map(t=>({n:t.name,v:endWorth(t.id,i)})).sort((a,b)=>b.v-a.v).map(x=>`<div class='r'><span>${esc(x.n)}</span><b>$${fmt(x.v)}</b></div>`).join("");
+  const leader=S.teams.map(t=>({id:t.id,w:endWorth(t.id,r)})).sort((a,b)=>b.w-a.w)[0].id;
+  const race=lineChart({series,upto:r,nCols,yfmt:v=>"$"+kfmt(v),tipFn:teamTip,highlight:focus||leader,band:CAPITAL,R:190});
+  const allMax=Math.max(CAPITAL,...S.teams.map(t=>Math.max(...teamHistory(t.id,r))));
+  const ranking=S.teams.map(t=>({t,w:endWorth(t.id,r)})).sort((a,b)=>b.w-a.w);
+  const pos={};ranking.forEach((x,i)=>pos[x.t.id]=i+1);
+  const cards=S.teams.map(t=>{
+    const rr=Math.min(r,6),L=ledger(t.id,rr),w=worth(L,r),segs=compSegs(L,r);
+    const cols=[];for(let i=0;i<=r;i++){const Li=ledger(t.id,Math.min(i,6)),s=compSegs(Li,i),tot=s.reduce((a,b)=>a+b.v,0);
+      cols.push({r:i,cur:i===r,total:tot,segs:s,tip:`<b>${esc(t.name)} · R${i}</b><br>Total $${fmt(tot)}`+s.filter(x=>x.v>0).map(x=>`<div class='r'><span>${swatch(x.c)}${esc(x.n)}</span><b>$${fmt(x.v)}</b></div>`).join("")})}
+    const dd=r>=4?ddCrash(t.id):null;
+    return `<div class="card"><div class="card-h"><div style="display:flex;align-items:center;gap:10px"><span class="rank-n ${pos[t.id]===1?"g1":""}">${pos[t.id]}</span><h2>${esc(t.name)}</h2></div><span class="chg ${chgCls(pct(w,CAPITAL))}">${arrow(pct(w,CAPITAL))} ${sign(pct(w,CAPITAL))}</span></div>
+      <div class="team-top">${donut(segs,{size:120,label:"$"+kfmt(w),sub:"patrimonio"})}
+        <div class="kpis"><div class="kpi" style="grid-column:1/-1;background:var(--accent-soft)"><div class="l">Efectivo disponible</div><div class="v" style="font-size:22px">$${fmt(L.cash)}</div></div><div class="kpi"><div class="l">Activos valen hoy</div><div class="v">$${fmt(holdVal(L,r))}</div></div>
+        <div class="kpi"><div class="l">Caída en el crash</div><div class="v ${dd!==null&&dd<-0.05?"down":""}">${dd===null?"—":sign(dd)}</div></div></div></div>
+      <div class="lbl" style="margin:14px 0 6px">De dónde sale su efectivo</div>${flowHTML(L,{compact:true})}
+      <div class="lbl" style="margin:12px 0 2px">Portafolio por ronda</div>${stackColumns(cols,{yMax:allMax})}
+      <div style="display:flex;justify-content:flex-end"><button class="ghost" data-focus="${t.id}" style="padding:4px 10px;font-size:12px">${focus===t.id?"Quitar resaltado":"Resaltar en la carrera"}</button></div></div>`}).join("");
+  $("#desk-equipos").innerHTML=`
+   <div class="card" style="margin-bottom:18px"><div class="card-h"><h2>Carrera del patrimonio</h2><p>Resaltado: ${esc(tn(focus||leader))}${focus?"":" (líder)"}. Pasa el cursor para ver todos. La línea negra es el capital inicial de $10.000.</p></div><div class="chartwrap">${race}</div></div>
+   <div class="legend" style="margin-bottom:12px">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.n}</span>`).join("")}<span>${swatch("var(--cash)")}Efectivo</span></div>
+   <div class="teams">${cards}</div>`}
 
-function swTab(id, btn){
-  document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active');});
-  document.querySelectorAll('.tab').forEach(function(el){el.classList.remove('active');});
-  document.getElementById(id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='comparacion') renderComp();
-}
+/* ---------- Puntaje ---------- */
+function scores(){
+  const final=S.round>=6;
+  const rows=S.teams.map(t=>{const r=Math.min(S.round,6),L=ledger(t.id,r);const fw=final?finalWorth(t.id):Math.round(worth(L,r));
+    const tot=worth(L,r),wts=ASSETS.map(a=>L.h[a.k]*price(a.k,r)/tot);const nA=wts.filter(x=>x>=.1).length,maxW=Math.max(...wts)*100;
+    const div=nA<=1?2:nA===2?8:(nA>=4&&maxW<=40)?20:14;let risk=null,dd=null;
+    if(S.round>=4){dd=ddCrash(t.id);const a=Math.abs(Math.min(0,dd));risk=a<10?20:a<20?14:a<30?8:2}
+    return {t,fw,nA,maxW,div,dd,risk,dec:S.decision[t.id]||0}});
+  const sorted=[...rows].sort((a,b)=>b.fw-a.fw);sorted.forEach((x,i)=>{x.rank=i+1;x.rent=Math.max(4,40-6*i)});
+  for(let i=1;i<sorted.length;i++)if(sorted[i].fw===sorted[i-1].fw){sorted[i].rent=sorted[i-1].rent;sorted[i].rank=sorted[i-1].rank}
+  rows.forEach(x=>x.total=x.rent+x.div+(x.risk||0)+x.dec);return {rows:rows.sort((a,b)=>b.total-a.total),final}}
+function observe(id){const ex=S.trades.filter(t=>t.team===id&&t.status==="ejecutado");
+  const k2=ex.filter(t=>t.round===2&&t.side==="BUY"&&t.asset==="K").reduce((s,t)=>s+t.qty,0);
+  let loss4=0;const L3=ledger(id,3);ex.filter(t=>t.round===4&&t.side==="SELL").forEach(t=>{const avg=L3.h[t.asset]?L3.cost[t.asset]/L3.h[t.asset]:0;if(t.price<avg)loss4+=(avg-t.price)*t.qty});
+  const buy4=ex.filter(t=>t.round===4&&t.side==="BUY").map(t=>t.qty+" "+A(t.asset).sym).join(", ");
+  return {k2,loss4:Math.round(loss4),buy4,cash3:S.round>=3?L3.cash/worth(L3,3)*100:null}}
+function renderPuntaje(){
+  const {rows,final}=scores();
+  const crit=[["Rentabilidad","var(--c-rent)","rent",40],["Diversificación","var(--c-div)","div",20],["Riesgo","var(--c-risk)","risk",20],["Decisiones","var(--c-dec)","dec",20]];
+  const bars=hBars(rows.map(x=>({name:x.t.name,total:x.total,segs:crit.map(([n,c,k,m])=>({n,c,v:x[k]||0,label:(x[k]||0)+" / "+m}))})),{w:760,max:100,fmtv:v=>v+" pts"});
+  const top=rows.slice(0,3);const podOrder=[top[1],top[0],top[2]].filter(Boolean);const hts={1:150,2:110,3:80};
+  const podium=final&&top.length>=3?`<div class="card" style="margin-bottom:18px"><div class="card-h"><h2>Podio final</h2><p>Gana la mejor combinación de resultado y decisión</p></div><div class="podium">${podOrder.map(x=>{const p=rows.indexOf(x)+1;return `<div class="pod"><b>${esc(x.t.name)}</b><span class="num muted">${x.total} pts</span><div class="blk" style="height:${hts[p]}px;background:${p===1?"var(--pop)":p===2?"var(--accent-soft)":"var(--sunk)"};color:${p===1?"#121429":"var(--ink)"}">${p}</div></div>`}).join("")}</div></div>`:"";
+  const obsTeams=S.teams.map(t=>({t,o:observe(t.id)}));
+  $("#desk-puntaje").innerHTML=`${podium}
+   <div class="card"><div class="card-h"><h2>¿Quién ganó realmente?</h2><span class="pill ${final?"ok":"warn"}">${final?"Cierre · inflación "+S.settings.inflation+"% sobre el efectivo":"Provisional · Ronda "+S.round}</span></div>
+     <div class="legend" style="margin-bottom:8px">${crit.map(([n,c,,m])=>`<span>${swatch(c)}${n} /${m}</span>`).join("")}</div>
+     <div class="chartwrap">${bars}</div></div>
+   <div class="card flat" style="margin-top:18px"><div class="card-h"><h2>Detalle y evaluación de decisiones</h2><p>Elige el puntaje de decisiones según las razones de los tickets y la justificación de 60 s</p></div>
+   <div class="tablewrap"><table><thead><tr><th>Equipo</th><th class="r">Patrimonio</th><th class="r">Rentab.</th><th class="r">Diversif.</th><th class="r">Riesgo</th><th>Decisiones</th><th class="r">Total</th></tr></thead><tbody>
+   ${rows.map(x=>`<tr><td><b>${esc(x.t.name)}</b></td><td class="r num">$${fmt(x.fw)}<br><span class="muted" style="font-size:12px">${x.rank}.º lugar</span></td><td class="r num">${x.rent}</td><td class="r num">${x.div}<br><span class="muted" style="font-size:12px">${x.nA} activos · máx ${x.maxW.toFixed(0)}%</span></td><td class="r num">${x.risk===null?"—":x.risk}<br><span class="muted" style="font-size:12px">${x.dd===null?"desde R4":sign(x.dd)}</span></td>
+     <td><select data-dec="${x.t.id}" aria-label="Decisiones de ${esc(x.t.name)}"><option value="0" ${!x.dec?"selected":""}>Sin evaluar</option><option value="5" ${x.dec===5?"selected":""}>5 · Reacción</option><option value="12" ${x.dec===12?"selected":""}>12 · Razón con dato</option><option value="20" ${x.dec===20?"selected":""}>20 · Dato + fuente + riesgo</option></select></td><td class="r num" style="font-size:18px;font-weight:700">${x.total}</td></tr>`).join("")}</tbody></table></div></div>
+   <div class="card flat" style="margin-top:18px"><div class="card-h"><h2>Momentos para el debrief</h2><p>Detectados automáticamente en el registro</p></div>
+   <div class="tablewrap"><table><thead><tr><th>Equipo</th><th>R2 compró Krugs (FOMO)</th><th>R4 vendió con pérdida</th><th>R4 compró en la caída</th><th class="r">Efectivo al entrar al crash</th></tr></thead><tbody>
+   ${obsTeams.map(({t,o})=>`<tr><td><b>${esc(t.name)}</b></td><td>${o.k2?`<span class="pill warn">Sí · ${o.k2} u.</span>`:'<span class="muted">No</span>'}</td><td>${o.loss4?`<span class="pill no">Sí · −$${fmt(o.loss4)}</span>`:'<span class="muted">No</span>'}</td><td>${o.buy4?`<span class="pill ok">Sí · ${o.buy4}</span>`:'<span class="muted">No</span>'}</td><td class="r num">${o.cash3===null?"—":o.cash3.toFixed(0)+"%"}</td></tr>`).join("")}</tbody></table></div></div>`}
 
-render();
+/* ---------- Registro ---------- */
+let pendingVoid=null;
+function renderRegistro(){
+  const list=[...S.trades].reverse(),n=maxRound()>6?7:7;
+  // activity per round: buys vs sells (executed) + rejects
+  const act=[];for(let i=0;i<7;i++){const tr=S.trades.filter(t=>t.round===i);act.push({b:tr.filter(t=>t.status==="ejecutado"&&t.side==="BUY").length,s:tr.filter(t=>t.status==="ejecutado"&&t.side==="SELL").length,x:tr.filter(t=>t.status!=="ejecutado").length})}
+  const mx=Math.max(1,...act.map(a=>a.b+a.s+a.x));const w=560,h=170,L=30,B=24,T=10,ih=h-T-B,band=(w-L)/7,bw=26;
+  const ticks=niceTicks(0,mx,3),top=ticks[ticks.length-1],Y=v=>T+ih-v/top*ih;
+  let ch=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="img">`;ticks.forEach(t=>ch+=`<line class="grid" x1="${L}" x2="${w}" y1="${Y(t)}" y2="${Y(t)}"/><text class="mono" x="${L-6}" y="${Y(t)+4}" text-anchor="end">${t}</text>`);
+  act.forEach((a,i)=>{const cx=L+band*i+band/2;let acc=0;const segs=[["Compras","var(--up)",a.b],["Ventas","var(--down)",a.s],["Rechazos","var(--cash)",a.x]].filter(s=>s[2]>0);
+    segs.forEach((s,j)=>{const y=Y(acc+s[2]),hh=Y(acc)-y;ch+=`<rect x="${cx-bw/2}" y="${y+1}" width="${bw}" height="${Math.max(0,hh-2)}" rx="${j===segs.length-1?4:1}" fill="${s[1]}"/>`;acc+=s[2]});
+    ch+=`<rect class="hit" x="${cx-band/2}" y="${T}" width="${band}" height="${ih}" ${tipAttr(`<b>R${i} · ${ROUNDS[i].tag}</b><div class='r'><span>${swatch("var(--up)")}Compras</span><b>${a.b}</b></div><div class='r'><span>${swatch("var(--down)")}Ventas</span><b>${a.s}</b></div><div class='r'><span>${swatch("var(--cash)")}Rechazos</span><b>${a.x}</b></div>`)}/>`;
+    ch+=`<text x="${cx}" y="${h-6}" text-anchor="middle" style="font-size:11px">R${i} ${ROUNDS[i].tag}</text>`});ch+=`</svg>`;
+  $("#desk-registro").innerHTML=`
+   <div class="cols-2" style="margin-bottom:18px"><div class="card"><div class="card-h"><h2>Actividad por ronda</h2><div class="legend"><span>${swatch("var(--up)")}Compras</span><span>${swatch("var(--down)")}Ventas</span><span>${swatch("var(--cash)")}Rechazos</span></div></div><div class="chartwrap">${ch}</div></div>
+   <div class="card"><div class="card-h"><h2>Respaldo</h2></div><div class="grid" style="gap:12px"><p class="muted" style="margin:0;font-size:14px">Los datos viven en este navegador. Descarga un respaldo antes de la clase y al terminar.</p>
+     <div class="toolbar"><button id="csvBtn" data-dl>Descargar CSV</button><button id="jsonBtn" data-dl class="pop">Guardar respaldo</button></div>
+     <label class="f"><span class="lbl">Restaurar un respaldo (.json)</span><input id="restore" type="file" accept=".json,application/json"></label></div></div></div>
+   <div class="card flat"><div class="card-h"><h2>Registro maestro</h2><p>${S.trades.length} tickets</p></div>
+   ${pendingVoid?`<div class="confirm" style="margin-bottom:12px">¿Anular la orden #${pendingVoid}? Úsalo solo para corregir errores de digitación. <button id="voidYes" class="danger">Anular</button><button id="voidNo" class="ghost">Cancelar</button></div>`:""}
+   ${list.length?`<div class="tablewrap"><table><thead><tr><th>#</th><th>R</th><th>Equipo</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Monto</th><th>RM</th><th>Razón</th><th>Estado</th><th></th></tr></thead><tbody>
+   ${list.map(t=>`<tr><td class="num">${t.id}</td><td class="num">${t.round}</td><td>${esc(tn(t.team))}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${t.price}</td><td class="r num">$${fmt(t.qty*t.price)}</td><td>${t.rm?"✓":"—"}</td><td style="min-width:180px">${esc(t.reason)||'<span class="muted">Sin razón</span>'}</td><td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn">Rechazada</span><div class="muted" style="font-size:12px">${esc(t.why)}</div>`}</td><td><button class="ghost" data-void="${t.id}" style="padding:4px 10px;font-size:12px">Anular</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">El registro está vacío. Cada ticket que ejecutes o rechaces en la Mesa del Broker queda aquí.</div>`}</div>`}
+
+/* ---------- Ajustes ---------- */
+let pendingReset=false;
+function renderAjustes(){const st=S.settings;
+  $("#desk-ajustes").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))">
+   <div class="card"><div class="card-h"><h2>Equipos</h2><p>${S.teams.length} de 10</p></div><div class="grid" style="gap:10px">${S.teams.map((t,i)=>`<label class="f"><span class="lbl">Equipo ${i+1}</span><input id="tname-${t.id}" data-tname="${t.id}" value="${esc(t.name)}"></label>`).join("")}</div>
+     <div class="toolbar" style="margin-top:14px"><button id="addTeam" ${S.teams.length>=10?"disabled":""}>+ Agregar equipo</button><button id="delTeam" class="ghost" ${S.teams.length<=2||S.trades.some(x=>x.team===S.teams[S.teams.length-1].id)?"disabled":""}>Quitar el último</button></div></div>
+   <div class="card"><div class="card-h"><h2>Reglas del mercado</h2></div><div class="grid" style="gap:14px">
+     <label class="f"><span class="lbl">Comisión por orden ejecutada ($)</span><input id="sFee" type="number" min="0" step="1" value="${st.fee}"></label>
+     <label class="f"><span class="lbl">Límite por activo (% del patrimonio)</span><input id="sCap" type="number" min="10" max="100" step="5" value="${st.cap}"></label>
+     <label class="f"><span class="lbl">Inflación al cierre sobre el efectivo (%)</span><input id="sInf" type="number" min="0" max="50" step="1" value="${st.inflation}"></label>
+     <div class="two"><label class="f"><span class="lbl">Análisis (segundos)</span><input id="sAna" type="number" min="10" max="600" step="10" value="${anaSec()}"></label>
+       <label class="f"><span class="lbl">Mercado abierto (minutos)</span><input id="sMkt" type="number" min="0.5" max="20" step="0.5" value="${mktSec()/60}"></label></div>
+     <label class="check"><input id="sRM" type="checkbox" ${st.requireRM?"checked":""}> Exigir firma del Risk Manager</label>
+     <label class="check"><input id="sBonus" type="checkbox" ${st.bonus?"checked":""}> Incluir la ronda bonus de 5 años</label>
+     <p class="muted" style="font-size:13px;margin:0">Los cambios de comisión y límite aplican a las órdenes nuevas.</p></div></div>
+   <div class="card"><div class="card-h"><h2>Partida</h2></div><div class="grid" style="gap:12px">
+     <button id="demoBtn" class="pop">Cargar partida de ejemplo</button>
+     <p class="muted" style="margin:0;font-size:13px">Seis equipos con las estrategias de referencia de la guía (contrarian, fundamentos, conservador, diversificado, apostador y FOMO + pánico), jugados hasta la Ronda 6. Útil para ensayar el debrief.</p>
+     ${pendingReset?`<div class="confirm">Se borrarán todas las órdenes y se volverá a R0. <button id="resetYes" class="danger">Borrar y reiniciar</button><button id="resetNo" class="ghost">Cancelar</button></div>`:`<button id="resetBtn" class="danger">Nueva partida</button>`}
+     <p class="muted" style="margin:0;font-size:13px">Atajos: flechas ← → cambian de ronda.</p></div></div></div>`}
+
+/* ---------- Demo ---------- */
+function loadDemo(){S=freshState(6);
+  const names=["Contrarian","Fundamentos","Conservador","Diversificado","Apostador","FOMO + pánico"];S.teams.forEach((t,i)=>t.name=names[i]);
+  // plan in dollars (buy) or share of holdings (sell), resolved at each round's price
+  const plan={t1:{0:[["S",4900,"Base segura"],["G",2400,"Contrato confirmado"],["N",2400,"IA con ventas"]],4:[["S",-0.5,"Liquidez para comprar en la caída"],["N",2500,"Kaiman reporta ventas +30%"]]},
+   t2:{0:[["N",4900,"Ventas en crecimiento"],["G",4900,"Energía limpia con contratos"]]},t3:{0:[["S",4900,"Proteger capital"],["G",2400,"Riesgo medio"],["N",2400,"Crecimiento"]]},
+   t4:{0:ASSETS.map(a=>[a.k,1900,"Un poco de todo"])},t5:{0:[["K",4900,"Puede explotar"],["O",4900,"Tengo un presentimiento"]]},
+   t6:{0:ASSETS.map(a=>[a.k,1900,"Un poco de todo"]),2:[["S",-1,"Todos compran Krugs"],["K","cash","El influencer dice ×10"]],4:[["K",-1,"Hay que salir ya"],["O",-1,"Pánico"]]}};
+  const fee=S.settings.fee;
+  for(let r=0;r<=6;r++)for(const t of S.teams)(plan[t.id][r]||[]).forEach(([k,amt,why])=>{
+    const L=ledger(t.id,r),p=price(k,r);let side,q;
+    if(amt==="cash"){side="BUY";q=Math.floor((L.cash-fee)/p)}
+    else if(amt<0){side="SELL";q=Math.round(L.h[k]*Math.abs(amt))}
+    else{side="BUY";q=Math.floor(amt/p)}
+    if(q<=0)return;S.seq++;S.trades.push({id:S.seq,team:t.id,round:r,side,asset:k,qty:q,price:p,fee,reason:why,rm:true,status:"ejecutado",why:"",ts:Date.now()})});
+  S.round=6;S.phase="cerrado";S.tab="puntaje";S.decision={t1:20,t2:12,t3:12,t4:12,t5:5,t6:5};save();render();toast("Partida de ejemplo cargada en la Ronda 6.")}
+
+/* ---------- Export ---------- */
+let DL=null;
+async function initDownloads(){try{if(window.claude&&window.claude.use)DL=await window.claude.use("downloads")}catch(e){DL=null}document.querySelectorAll("[data-dl]").forEach(b=>b.hidden=false)}
+async function saveFile(name,data){if(!DL){try{const url=URL.createObjectURL(new Blob([data],{type:name.endsWith(".csv")?"text/csv;charset=utf-8":"application/json"}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast("Archivo descargado.")}catch(e){toast("No se pudo descargar el archivo.")}return}
+  try{await DL.save({filename:name,data});toast("Archivo guardado.")}catch(e){const c=e&&e.code;if(c==="declined")return;if(c==="rate_limited"){toast("Ya hay una descarga pendiente de confirmar.");return}toast("No se pudo guardar el archivo.");if(c==="unavailable"||c==="not_granted"){DL=null;document.querySelectorAll("[data-dl]").forEach(b=>b.hidden=true)}}}
+function csv(){const head=["id","ronda","equipo","operacion","activo","cantidad","precio","monto","comision","firma_RM","razon","estado","motivo_rechazo"];const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  return head.join(",")+"\n"+S.trades.map(t=>[t.id,t.round,tn(t.team),t.side,an(t.asset),t.qty,t.price,t.qty*t.price,t.fee,t.rm?"si":"no",t.reason,t.status,t.why].map(q).join(",")).join("\n")}
+
+/* ---------- Tooltip ---------- */
+const tip=$("#tip");
+function showTip(el,x,y){tip.innerHTML=el.getAttribute("data-tip");tip.hidden=false;const r=tip.getBoundingClientRect();let L=x+14,T=y+14;if(L+r.width>innerWidth-8)L=x-r.width-14;if(T+r.height>innerHeight-8)T=y-r.height-14;tip.style.left=Math.max(8,L)+"px";tip.style.top=Math.max(8,T)+"px"}
+document.addEventListener("mousemove",e=>{const el=e.target.closest&&e.target.closest("[data-tip]");if(el)showTip(el,e.clientX,e.clientY);else tip.hidden=true});
+document.addEventListener("focusin",e=>{const el=e.target.closest&&e.target.closest("[data-tip]");if(el){const r=el.getBoundingClientRect();showTip(el,r.right,r.top)}});
+document.addEventListener("focusout",()=>tip.hidden=true);
+document.addEventListener("scroll",()=>tip.hidden=true,true);
+
+/* ---------- Render + events ---------- */
+function render(){renderStrip();({mercado:renderMercado,broker:renderBroker,equipos:renderEquipos,puntaje:renderPuntaje,registro:renderRegistro,ajustes:renderAjustes})[S.tab]();tip.hidden=true;tick()}
+function goRound(d){const n=S.round+d;if(n<0||n>maxRound())return;S.round=n;S.phase="noticia";stopClock();T.asset=null;T.qty="";save();render()}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.tab){S.tab=b.dataset.tab;save();render();return}
+  if(b.dataset.ph){const ph=b.dataset.ph;if(ph==="analisis")startClock(anaSec(),ph);else if(ph==="abierto")startClock(mktSec(),ph);else{stopClock();setPhase(ph)}return}
+  if(b.id==="prevRound"){goRound(-1);return} if(b.id==="nextRound"){goRound(1);return}
+  if(b.id==="tStop"){stopClock();return}
+  if(b.dataset.go){S.tab=b.dataset.go;save();render();return}
+  if(b.id==="nextStep"){
+    if(S.phase==="noticia")startClock(anaSec(),"analisis");
+    else if(S.phase==="analisis")startClock(mktSec(),"abierto");
+    else if(S.phase==="abierto"){stopClock();setPhase("cerrado");toast("Mercado cerrado. Ahora registra los tickets del buzón.")}
+    else if(S.round>=maxRound()){S.tab="puntaje";save();render()}
+    else{goRound(1);if(S.round===7){S.tab="mercado";save();render()}}
+    return}
+  if(b.id==="toggleRank"){S.hideRank=!S.hideRank;save();render();return}
+  if(b.dataset.focus){S.focusTeam=S.focusTeam===b.dataset.focus?null:b.dataset.focus;save();render();window.scrollTo({top:0,behavior:"smooth"});return}
+  if(b.dataset.team){T.team=b.dataset.team;render();return}
+  if(b.dataset.side){T.side=b.dataset.side;render();return}
+  if(b.dataset.asset){T.asset=b.dataset.asset;render();return}
+  if(b.id==="clearBtn"){T={team:T.team,side:"BUY",asset:null,qty:"",reason:"",rm:false};render();return}
+  if(b.id==="rejectBtn"){const c=check({team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm});executeTicket("rechazado",c.why);return}
+  if(b.dataset.void){pendingVoid=Number(b.dataset.void);render();return}
+  if(b.id==="voidYes"){S.trades=S.trades.filter(t=>t.id!==pendingVoid);toast("Orden #"+pendingVoid+" anulada.");pendingVoid=null;save();render();return}
+  if(b.id==="voidNo"){pendingVoid=null;render();return}
+  if(b.id==="csvBtn"){saveFile("smart-market-registro.csv",csv());return}
+  if(b.id==="jsonBtn"){saveFile("smart-market-respaldo.json",JSON.stringify(S,null,1));return}
+  if(b.id==="addTeam"){const n=S.teams.length+1;let id="t"+n;while(S.teams.some(t=>t.id===id))id+="x";S.teams.push({id,name:"Equipo "+n});save();render();return}
+  if(b.id==="delTeam"){S.teams.pop();save();render();return}
+  if(b.id==="demoBtn"){loadDemo();return}
+  if(b.id==="resetBtn"){pendingReset=true;render();return} if(b.id==="resetNo"){pendingReset=false;render();return}
+  if(b.id==="resetYes"){const keep=S.teams.map(t=>t.name);S=freshState(keep.length);S.teams.forEach((t,i)=>t.name=keep[i]);pendingReset=false;stopClock();save();render();toast("Nueva partida lista en R0.");return}});
+document.addEventListener("submit",e=>{e.preventDefault();if(e.target.id!=="ticketForm")return;const c=check({team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm});if(c.ok)executeTicket("ejecutado")});
+let reRender;
+document.addEventListener("input",e=>{const el=e.target;
+  if(el.id==="qty"){T.qty=el.value.trim();clearTimeout(reRender);reRender=setTimeout(()=>{render();const q=$("#qty");if(q){q.focus();const v=q.value;q.value="";q.value=v}},300)}
+  else if(el.id==="reason")T.reason=el.value;
+  else if(el.dataset.tname){const t=S.teams.find(x=>x.id===el.dataset.tname);if(el.value.trim())t.name=el.value;save()}});
+document.addEventListener("change",e=>{const el=e.target;
+  if(el.id==="teamSel"){T.team=el.value||null;render()}
+  else if(el.id==="rm"){T.rm=el.checked;render()}
+  else if(el.dataset.dec){S.decision[el.dataset.dec]=Number(el.value);save();render()}
+  else if(el.id==="sFee"){S.settings.fee=Math.max(0,Math.round(Number(el.value)||0));save()}
+  else if(el.id==="sCap"){S.settings.cap=Math.min(100,Math.max(10,Number(el.value)||50));save()}
+  else if(el.id==="sInf"){S.settings.inflation=Math.min(50,Math.max(0,Number(el.value)||0));save()}
+  else if(el.id==="sAna"){S.settings.analysisSec=Math.min(600,Math.max(10,Math.round(Number(el.value)||60)));save();renderStrip()}
+  else if(el.id==="sMkt"){S.settings.marketSec=Math.min(1200,Math.max(30,Math.round((Number(el.value)||5)*60)));save();renderStrip()}
+  else if(el.id==="sRM"){S.settings.requireRM=el.checked;save()}
+  else if(el.id==="sBonus"){S.settings.bonus=el.checked;if(!el.checked&&S.round>6)S.round=6;save();render()}
+  else if(el.dataset.tname){render()}
+  else if(el.id==="restore"&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d.teams||!d.trades)throw 0;S=d;save();render();toast("Respaldo restaurado.")}catch(_){toast("Ese archivo no es un respaldo de Smart Market.")}};fr.readAsText(el.files[0])}});
+document.addEventListener("keydown",e=>{if(e.target.matches("input,select,textarea"))return;if(e.key==="ArrowRight")goRound(1);if(e.key==="ArrowLeft")goRound(-1)});
+render();initDownloads();
+})();
 </script>
+
 </body>
 </html>
