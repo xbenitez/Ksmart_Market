@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Consola del Broker para el Smart Market Challenge de Kruger School.">
 <style>body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <title>KrugerSchool Smart Market</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -244,6 +247,20 @@ td.r,th.r{text-align:right}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .flag.open{animation:pulse 1.2s ease-in-out infinite}
 
+/* online mode */
+.netpill{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.netpill i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.netpill.on{background:var(--up-soft);color:var(--up)}.netpill.on i{background:var(--up)}
+.netpill.err{background:var(--down-soft);color:var(--down)}.netpill.err i{background:var(--down)}
+.qrbox{background:#fff;border-radius:18px;padding:14px;display:inline-block;line-height:0}
+.qrbox img,.qrbox canvas{display:block;width:220px;height:220px}
+.codebig{font-family:var(--f-mono);font-weight:700;font-size:clamp(28px,3.4vw,44px);letter-spacing:.06em}
+.linkbox{font-family:var(--f-mono);font-size:12px;word-break:break-all;background:var(--sunk);border-radius:12px;padding:10px 12px;color:#C9D3EC;max-height:96px;overflow:auto}
+.team-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 18px;margin-bottom:18px}
+.team-name{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,3vw,40px)}
+.join{max-width:520px;margin:40px auto;display:grid;gap:16px}
+textarea{font:inherit;color:var(--ink);background:var(--sunk);border:2px solid #3A4C7C;border-radius:12px;padding:10px 12px;min-height:120px;width:100%;font-family:var(--f-mono);font-size:12px}
+body.teammode .guide,body.teammode .tabs,body.teammode #roundCtl,body.teammode #tStop{display:none}
 /* Kruger School redesign */
 body{background-image:none}
 h1,h2,h3{font-weight:800;letter-spacing:-.01em}
@@ -312,14 +329,14 @@ details.key{border-color:var(--line);border-radius:20px}
 <div class="wrap">
   <header class="strip">
     <div class="strip-row">
-      <div class="logo"><svg class="ks-logo" role="img" aria-label="Kruger School" xmlns="http://www.w3.org/2000/svg" width="260" height="61" viewBox="0 0 260 61" fill="none"><path d="M171.427 9.39619C171.317 8.43385 177.974 12.8722 178.506 14.6589C179.038 16.4457 171.822 12.8722 171.427 9.39619Z" fill="#00B2E3"></path><path d="M187.594 0.0595308C188.128 -0.749532 190.388 6.92616 189.65 8.63844C188.913 10.3507 185.669 2.98048 187.594 0.0595308Z" fill="#00B2E3"></path><path d="M205.256 0.456919C206.081 -0.049977 204.874 7.86 203.479 9.09823C202.084 10.3365 202.271 2.28634 205.256 0.456919Z" fill="#00B2E3"></path><path d="M222.111 8.86973C223.077 8.92118 217.591 14.7445 215.74 14.9722C213.889 15.1988 218.616 8.68142 222.111 8.86973Z" fill="#00B2E3"></path><path d="M58.4409 46.7827H48.2318C47.6526 46.7827 47.1797 46.4137 47.1797 45.8357V41.6261C47.1797 41.047 47.6526 40.6255 48.2318 40.6255H58.4409C59.02 40.6255 59.493 41.047 59.493 41.6261V45.8357C59.493 46.4137 59.02 46.7827 58.4409 46.7827Z" fill="#FF5B00"></path><path d="M75.6478 60.2006C71.4908 60.2006 68.386 59.7277 65.7026 59.0434C65.1771 58.8847 64.6505 58.5705 64.6505 57.9913V52.8337C64.6505 52.0969 65.0709 51.8341 65.5975 51.8341H65.7552C67.9119 52.0443 73.7013 52.4658 75.7529 52.4658C79.3844 52.4658 80.4365 51.3075 80.4365 48.7818C80.4365 47.2556 79.6997 46.4137 76.9638 44.7825L69.7019 40.4667C64.8081 37.5721 63.4922 34.257 63.4922 30.4153C63.4922 24.6271 66.7547 20.1548 76.9638 20.1548C80.8055 20.1548 86.1197 20.7854 88.1199 21.312C88.5403 21.4171 88.9092 21.6799 88.9092 22.259V27.5732C88.9092 28.0472 88.6979 28.4677 88.0148 28.4677H87.9097C86.4361 28.3615 80.3325 27.8885 76.7536 27.8885C73.7538 27.8885 72.6491 28.783 72.6491 30.6781C72.6491 32.1517 73.3334 32.8348 76.1755 34.361L82.9108 37.9925C88.3837 40.9386 90.015 44.4124 90.015 48.6745C90.015 54.2525 86.331 60.1984 75.6489 60.1984" fill="#FF5B00"></path><path d="M118.429 59.3062C117.324 59.6751 114.272 60.2006 110.588 60.2006C102.589 60.2006 95.0117 55.9911 95.0117 43.4676V36.8364C95.0117 24.3118 102.589 20.1548 110.588 20.1548C114.272 20.1548 117.323 20.6814 118.429 21.0492C119.165 21.2594 119.586 21.4696 119.586 22.2065V27.3104C119.586 27.9421 119.27 28.3626 118.586 28.3626H118.427C116.427 28.2049 113.534 27.9421 110.639 27.9421C107.009 27.9421 104.114 29.8373 104.114 36.8353V43.4665C104.114 50.4645 107.009 52.3596 110.639 52.3596C113.534 52.3596 116.427 52.0958 118.427 51.9381H118.586C119.27 51.9381 119.586 52.3596 119.586 52.9902V58.0942C119.586 58.831 119.165 59.0938 118.429 59.304" fill="#FF5B00"></path><path d="M155.364 59.7277H148.47C147.892 59.7277 147.418 59.2548 147.418 58.6756V43.4688H134.42V58.6756C134.42 59.2548 133.946 59.7277 133.368 59.7277H126.474C125.896 59.7277 125.422 59.2548 125.422 58.6756V21.6285C125.422 21.0504 125.896 20.6289 126.474 20.6289H133.368C133.946 20.6289 134.42 21.0493 134.42 21.6285V35.6267H147.418V21.6285C147.418 21.0504 147.891 20.6289 148.47 20.6289H155.364C155.943 20.6289 156.416 21.0493 156.416 21.6285V58.6745C156.416 59.2537 155.943 59.7267 155.364 59.7267" fill="#FF5B00"></path><path d="M258.652 59.5174C256.916 59.8853 252.864 60.2006 250.074 60.2006C243.286 60.2006 237.234 58.4653 237.234 48.8879V21.682C237.234 21.1039 237.707 20.6299 238.288 20.6299H245.18C245.76 20.6299 246.234 21.1028 246.234 21.682V48.8879C246.234 51.6239 247.128 52.4669 249.601 52.4669H258.652C259.231 52.4669 259.704 52.9398 259.704 53.519V58.4128C259.704 59.0959 259.389 59.3598 258.652 59.5174Z" fill="#FF5B00"></path><path d="M215.187 20.1558C207.478 20.1558 201.179 23.8496 199.864 33.2234C199.028 32.7657 198.07 32.5052 196.973 32.5402C195.74 32.5796 194.697 32.9256 193.814 33.4686C192.576 23.9131 186.236 20.1558 178.459 20.1558C169.776 20.1558 162.883 24.8393 162.883 37.0475V43.3098C162.883 55.518 169.776 60.2005 178.459 60.2005C187.142 60.2005 194.034 55.518 194.034 43.3098V38.5496C195.592 37.8708 197.472 37.6683 199.61 38.5682V43.3098C199.61 55.518 206.504 60.2005 215.186 60.2005C223.868 60.2005 230.762 55.518 230.762 43.3098V37.0475C230.762 24.8393 223.869 20.1558 215.186 20.1558M184.984 43.3098C184.984 49.6236 182.878 52.307 178.459 52.307C174.039 52.307 171.986 49.6236 171.986 43.3098V37.0475C171.986 30.7338 174.039 28.0493 178.459 28.0493C182.878 28.0493 184.984 30.7327 184.984 37.0475V43.3098ZM221.712 43.3098C221.712 49.6236 219.607 52.307 215.187 52.307C210.767 52.307 208.715 49.6236 208.715 43.3098V37.0475C208.715 30.7338 210.767 28.0493 215.187 28.0493C219.607 28.0493 221.712 30.7327 221.712 37.0475V43.3098Z" fill="#00B2E3"></path><path d="M219.508 36.2904C219.508 37.8362 218.255 39.0909 216.708 39.0909C215.161 39.0909 213.906 37.8362 213.906 36.2904C213.906 34.7445 215.161 33.4888 216.708 33.4888C218.255 33.4888 219.508 34.7434 219.508 36.2904Z" fill="#00B2E3"></path><path d="M182.782 36.2904C182.782 37.8362 181.528 39.0909 179.981 39.0909C178.434 39.0909 177.18 37.8362 177.18 36.2904C177.18 34.7445 178.433 33.4888 179.981 33.4888C181.529 33.4888 182.782 34.7434 182.782 36.2904Z" fill="#00B2E3"></path><path d="M10.67 0.0463867C4.77664 0.0463867 0 4.82412 0 10.7164C0 16.6086 4.77664 21.3842 10.67 21.3842C16.5633 21.3842 21.34 16.6097 21.34 10.7164C21.34 4.82303 16.5622 0.0463867 10.67 0.0463867ZM10.67 12.1878C9.85655 12.1878 9.19857 11.5298 9.19857 10.7164C9.19857 9.90293 9.85655 9.24496 10.67 9.24496C11.4834 9.24496 12.1414 9.90293 12.1414 10.7164C12.1414 11.5298 11.4834 12.1878 10.67 12.1878Z" fill="#FF5B00"></path><path d="M29.0034 33.647H12.7422L34.4752 59.6859H50.7473L29.0034 33.647Z" fill="#FF5B00"></path><path d="M34.4774 4.54492L12.7422 30.5849H29.0055L50.7462 4.54492H34.4774Z" fill="#FF5B00"></path><path d="M9.81911 34.082L3.78125 40.6684V59.7279H15.6468V41.0636L9.81911 34.082Z" fill="#FF5B00"></path></svg><div class="logo-name"><b>Smart Market</b><span>Mesa del Broker</span></div></div>
-      <div class="round-ctl">
+      <div class="logo"><svg class="ks-logo" role="img" aria-label="Kruger School" xmlns="http://www.w3.org/2000/svg" width="260" height="61" viewBox="0 0 260 61" fill="none"><path d="M171.427 9.39619C171.317 8.43385 177.974 12.8722 178.506 14.6589C179.038 16.4457 171.822 12.8722 171.427 9.39619Z" fill="#00B2E3"></path><path d="M187.594 0.0595308C188.128 -0.749532 190.388 6.92616 189.65 8.63844C188.913 10.3507 185.669 2.98048 187.594 0.0595308Z" fill="#00B2E3"></path><path d="M205.256 0.456919C206.081 -0.049977 204.874 7.86 203.479 9.09823C202.084 10.3365 202.271 2.28634 205.256 0.456919Z" fill="#00B2E3"></path><path d="M222.111 8.86973C223.077 8.92118 217.591 14.7445 215.74 14.9722C213.889 15.1988 218.616 8.68142 222.111 8.86973Z" fill="#00B2E3"></path><path d="M58.4409 46.7827H48.2318C47.6526 46.7827 47.1797 46.4137 47.1797 45.8357V41.6261C47.1797 41.047 47.6526 40.6255 48.2318 40.6255H58.4409C59.02 40.6255 59.493 41.047 59.493 41.6261V45.8357C59.493 46.4137 59.02 46.7827 58.4409 46.7827Z" fill="#FF5B00"></path><path d="M75.6478 60.2006C71.4908 60.2006 68.386 59.7277 65.7026 59.0434C65.1771 58.8847 64.6505 58.5705 64.6505 57.9913V52.8337C64.6505 52.0969 65.0709 51.8341 65.5975 51.8341H65.7552C67.9119 52.0443 73.7013 52.4658 75.7529 52.4658C79.3844 52.4658 80.4365 51.3075 80.4365 48.7818C80.4365 47.2556 79.6997 46.4137 76.9638 44.7825L69.7019 40.4667C64.8081 37.5721 63.4922 34.257 63.4922 30.4153C63.4922 24.6271 66.7547 20.1548 76.9638 20.1548C80.8055 20.1548 86.1197 20.7854 88.1199 21.312C88.5403 21.4171 88.9092 21.6799 88.9092 22.259V27.5732C88.9092 28.0472 88.6979 28.4677 88.0148 28.4677H87.9097C86.4361 28.3615 80.3325 27.8885 76.7536 27.8885C73.7538 27.8885 72.6491 28.783 72.6491 30.6781C72.6491 32.1517 73.3334 32.8348 76.1755 34.361L82.9108 37.9925C88.3837 40.9386 90.015 44.4124 90.015 48.6745C90.015 54.2525 86.331 60.1984 75.6489 60.1984" fill="#FF5B00"></path><path d="M118.429 59.3062C117.324 59.6751 114.272 60.2006 110.588 60.2006C102.589 60.2006 95.0117 55.9911 95.0117 43.4676V36.8364C95.0117 24.3118 102.589 20.1548 110.588 20.1548C114.272 20.1548 117.323 20.6814 118.429 21.0492C119.165 21.2594 119.586 21.4696 119.586 22.2065V27.3104C119.586 27.9421 119.27 28.3626 118.586 28.3626H118.427C116.427 28.2049 113.534 27.9421 110.639 27.9421C107.009 27.9421 104.114 29.8373 104.114 36.8353V43.4665C104.114 50.4645 107.009 52.3596 110.639 52.3596C113.534 52.3596 116.427 52.0958 118.427 51.9381H118.586C119.27 51.9381 119.586 52.3596 119.586 52.9902V58.0942C119.586 58.831 119.165 59.0938 118.429 59.304" fill="#FF5B00"></path><path d="M155.364 59.7277H148.47C147.892 59.7277 147.418 59.2548 147.418 58.6756V43.4688H134.42V58.6756C134.42 59.2548 133.946 59.7277 133.368 59.7277H126.474C125.896 59.7277 125.422 59.2548 125.422 58.6756V21.6285C125.422 21.0504 125.896 20.6289 126.474 20.6289H133.368C133.946 20.6289 134.42 21.0493 134.42 21.6285V35.6267H147.418V21.6285C147.418 21.0504 147.891 20.6289 148.47 20.6289H155.364C155.943 20.6289 156.416 21.0493 156.416 21.6285V58.6745C156.416 59.2537 155.943 59.7267 155.364 59.7267" fill="#FF5B00"></path><path d="M258.652 59.5174C256.916 59.8853 252.864 60.2006 250.074 60.2006C243.286 60.2006 237.234 58.4653 237.234 48.8879V21.682C237.234 21.1039 237.707 20.6299 238.288 20.6299H245.18C245.76 20.6299 246.234 21.1028 246.234 21.682V48.8879C246.234 51.6239 247.128 52.4669 249.601 52.4669H258.652C259.231 52.4669 259.704 52.9398 259.704 53.519V58.4128C259.704 59.0959 259.389 59.3598 258.652 59.5174Z" fill="#FF5B00"></path><path d="M215.187 20.1558C207.478 20.1558 201.179 23.8496 199.864 33.2234C199.028 32.7657 198.07 32.5052 196.973 32.5402C195.74 32.5796 194.697 32.9256 193.814 33.4686C192.576 23.9131 186.236 20.1558 178.459 20.1558C169.776 20.1558 162.883 24.8393 162.883 37.0475V43.3098C162.883 55.518 169.776 60.2005 178.459 60.2005C187.142 60.2005 194.034 55.518 194.034 43.3098V38.5496C195.592 37.8708 197.472 37.6683 199.61 38.5682V43.3098C199.61 55.518 206.504 60.2005 215.186 60.2005C223.868 60.2005 230.762 55.518 230.762 43.3098V37.0475C230.762 24.8393 223.869 20.1558 215.186 20.1558M184.984 43.3098C184.984 49.6236 182.878 52.307 178.459 52.307C174.039 52.307 171.986 49.6236 171.986 43.3098V37.0475C171.986 30.7338 174.039 28.0493 178.459 28.0493C182.878 28.0493 184.984 30.7327 184.984 37.0475V43.3098ZM221.712 43.3098C221.712 49.6236 219.607 52.307 215.187 52.307C210.767 52.307 208.715 49.6236 208.715 43.3098V37.0475C208.715 30.7338 210.767 28.0493 215.187 28.0493C219.607 28.0493 221.712 30.7327 221.712 37.0475V43.3098Z" fill="#00B2E3"></path><path d="M219.508 36.2904C219.508 37.8362 218.255 39.0909 216.708 39.0909C215.161 39.0909 213.906 37.8362 213.906 36.2904C213.906 34.7445 215.161 33.4888 216.708 33.4888C218.255 33.4888 219.508 34.7434 219.508 36.2904Z" fill="#00B2E3"></path><path d="M182.782 36.2904C182.782 37.8362 181.528 39.0909 179.981 39.0909C178.434 39.0909 177.18 37.8362 177.18 36.2904C177.18 34.7445 178.433 33.4888 179.981 33.4888C181.529 33.4888 182.782 34.7434 182.782 36.2904Z" fill="#00B2E3"></path><path d="M10.67 0.0463867C4.77664 0.0463867 0 4.82412 0 10.7164C0 16.6086 4.77664 21.3842 10.67 21.3842C16.5633 21.3842 21.34 16.6097 21.34 10.7164C21.34 4.82303 16.5622 0.0463867 10.67 0.0463867ZM10.67 12.1878C9.85655 12.1878 9.19857 11.5298 9.19857 10.7164C9.19857 9.90293 9.85655 9.24496 10.67 9.24496C11.4834 9.24496 12.1414 9.90293 12.1414 10.7164C12.1414 11.5298 11.4834 12.1878 10.67 12.1878Z" fill="#FF5B00"></path><path d="M29.0034 33.647H12.7422L34.4752 59.6859H50.7473L29.0034 33.647Z" fill="#FF5B00"></path><path d="M34.4774 4.54492L12.7422 30.5849H29.0055L50.7462 4.54492H34.4774Z" fill="#FF5B00"></path><path d="M9.81911 34.082L3.78125 40.6684V59.7279H15.6468V41.0636L9.81911 34.082Z" fill="#FF5B00"></path></svg><div class="logo-name"><b>Smart Market</b><span id="logoSub">Mesa del Broker</span></div></div>
+      <div class="round-ctl" id="roundCtl">
         <button id="prevRound" aria-label="Ronda anterior">◀</button>
         <div class="round-badge" id="roundBadge">R0</div>
         <button id="nextRound" aria-label="Ronda siguiente">▶</button>
       </div>
       <div class="phases" id="phases" role="group" aria-label="Fase de la ronda"></div>
-      <div class="clock">
+      <div class="clock" id="stripClock">
         <svg class="ring" id="miniRing" viewBox="0 0 46 46" aria-hidden="true"><circle class="bgc" cx="23" cy="23" r="19" fill="none" stroke-width="6"/><circle class="fgc" cx="23" cy="23" r="19" fill="none" stroke-width="6" stroke-linecap="round" transform="rotate(-90 23 23)" stroke-dasharray="119.4" stroke-dashoffset="119.4"/></svg>
         <span class="t" id="clockT">0:00</span>
         <button id="tStop" class="ghost" title="Detener el cronómetro">Pausar reloj</button>
@@ -334,6 +351,7 @@ details.key{border-color:var(--line);border-radius:20px}
   <section class="desk" id="desk-puntaje" hidden></section>
   <section class="desk" id="desk-registro" hidden></section>
   <section class="desk" id="desk-ajustes" hidden></section>
+  <section class="desk" id="desk-team" hidden></section>
 </div>
 <div class="toast" id="toast" hidden></div>
 <div class="tip" id="tip" hidden></div>
@@ -374,10 +392,22 @@ const dur=sec=>sec%60===0?(sec/60)+" min":sec>=60?Math.floor(sec/60)+" min "+(se
 const CAPITAL=10000, KEY="smc-broker-v1";
 
 /* ---------- State ---------- */
-function freshState(n){return {round:0,phase:"noticia",teams:Array.from({length:n||6},(_,i)=>({id:"t"+(i+1),name:"Equipo "+(i+1)})),trades:[],seq:0,settings:{fee:10,cap:50,inflation:5,bonus:true,requireRM:true,analysisSec:60,marketSec:300},decision:{},hideRank:true,tab:"broker",focusTeam:null}}
+function freshState(n){return {round:0,phase:"noticia",teams:Array.from({length:n||6},(_,i)=>({id:"t"+(i+1),name:"Equipo "+(i+1)})),trades:[],seq:0,phaseEndsAt:0,phaseDur:0,settings:{fee:10,cap:50,inflation:5,bonus:true,requireRM:true,analysisSec:60,marketSec:300},decision:{},hideRank:true,tab:"broker",focusTeam:null,showQR:false}}
 let S;try{S=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){S=null}
 if(!S||!S.teams)S=freshState(6);
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const QS=new URLSearchParams(location.search);
+const MODE=QS.get("juego")?"team":"facilitator";
+const KEY_ONLINE="smc-online-v1",KEY_TEAM="smc-team-v1";
+const SHARED=["round","phase","phaseEndsAt","phaseDur","settings","teams","decision"];
+let FB=null;           // {db,gameRef,gameId,cfg,unsub:[]}
+let NET="local";       // local | connecting | on | err
+let lastGameJSON="",lastTrades={},pushT=null,pendingRender=false,pushPending=false;
+if(MODE==="team"){S=freshState(0);S.tab="team"}
+function save(){
+  if(MODE==="team")return;
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(FB&&NET==="on"){pushPending=true;clearTimeout(pushT);pushT=setTimeout(pushRemote,120)}
+}
 const maxRound=()=>S.settings.bonus?7:6;
 const tradable=r=>r<=6;
 const price=(k,r)=>PRICES[k][Math.min(r,7)];
@@ -397,6 +427,10 @@ const endWorth=(id,r)=>worth(ledger(id,Math.min(r,6)),r);
 function finalWorth(id){const L=ledger(id,6);return Math.round(L.cash*(1-S.settings.inflation/100)+holdVal(L,6))}
 function ddCrash(id){const L3=ledger(id,3);return pct(worth(L3,4),worth(L3,3))}
 
+function emptyL(){const L={cash:CAPITAL,h:{},cost:{}};ASSETS.forEach(a=>{L.h[a.k]=0;L.cost[a.k]=0});return L}
+function applyTrade(L,t){if(t.side==="BUY"){L.cash-=t.qty*t.price+t.fee;L.cost[t.asset]+=t.qty*t.price;L.h[t.asset]+=t.qty}
+  else{const avg=L.h[t.asset]?L.cost[t.asset]/L.h[t.asset]:0;L.cash+=t.qty*t.price-t.fee;L.cost[t.asset]-=avg*t.qty;L.h[t.asset]-=t.qty}}
+function teamDoc(id){const L=ledger(id,6);return {cash:L.cash,h:L.h,cost:L.cost}}
 function check(o){
   const r=S.round;
   if(!tradable(r))return {ok:false,why:"La ronda de 5 años no se negocia."};
@@ -404,11 +438,13 @@ function check(o){
   if(!o.asset)return {ok:false,why:"Elige el activo."};
   if(!Number.isInteger(o.qty)||o.qty<=0)return {ok:false,why:"La cantidad debe ser un número entero mayor que cero."};
   if(S.settings.requireRM&&!o.rm)return {ok:false,why:"Falta la firma del Risk Manager."};
-  const L=ledger(o.team,r),p=price(o.asset,r),fee=S.settings.fee,gross=o.qty*p;
+  return validate(ledger(o.team,r),o,r,S.settings)}
+function validate(L,o,r,st){
+  const p=price(o.asset,r),fee=st.fee,gross=o.qty*p;
   if(o.side==="BUY"){
     if(L.cash<gross+fee)return {ok:false,why:`Efectivo insuficiente: necesita $${fmt(gross+fee)} y tiene $${fmt(L.cash)}.`};
     const after=worth(L,r)-fee,pos=(L.h[o.asset]+o.qty)*p,pc=pos/after*100;
-    if(pc>S.settings.cap+1e-9)return {ok:false,why:`${an(o.asset)} quedaría en ${pc.toFixed(0)}% del patrimonio. El límite es ${S.settings.cap}%.`,pct:pc};
+    if(pc>st.cap+1e-9)return {ok:false,why:`${an(o.asset)} quedaría en ${pc.toFixed(0)}% del patrimonio. El límite es ${st.cap}%.`,pct:pc};
     return {ok:true,cashAfter:L.cash-gross-fee,pct:pc}}
   if(L.h[o.asset]<o.qty)return {ok:false,why:`Solo tiene ${L.h[o.asset]} unidades de ${an(o.asset)}.`};
   if(L.cash+gross-fee<0)return {ok:false,why:"No alcanza para pagar la comisión."};
@@ -517,19 +553,21 @@ function hBars(rows,{w=620,rowH=38,max,fmtv=v=>"$"+fmt(v),ref}){
     g+=`<text class="mono ink" x="${x+8}" y="${y+bh/2+4}" style="font-weight:700">${fmtv(r.total)}</text>`});
   return g+`</svg>`}
 
-/* ---------- Clock ---------- */
-let clockEnd=0,clockDur=0,clockIv=null;
-function startClock(sec,phase){clockDur=sec;clockEnd=Date.now()+sec*1000;if(phase)setPhase(phase);clearInterval(clockIv);clockIv=setInterval(tick,200);tick()}
-function stopClock(){clearInterval(clockIv);clockIv=null;clockEnd=0;tick()}
+/* ---------- Clock (shared through phaseEndsAt) ---------- */
+let clockIv=null;
+function ensureClock(){if(S.phaseEndsAt&&S.phaseEndsAt>Date.now()&&!clockIv)clockIv=setInterval(tick,200)}
+function startClock(sec,phase){S.phaseDur=sec;S.phaseEndsAt=Date.now()+sec*1000;if(phase)S.phase=phase;save();render();ensureClock();tick()}
+function stopClock(){S.phaseEndsAt=0;clearInterval(clockIv);clockIv=null;save();tick()}
 function tick(){
-  const leftMs=Math.max(0,clockEnd-Date.now()),left=Math.ceil(leftMs/1000);
-  const txt=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");const low=!!clockIv&&left<=(clockDur>=120?30:10);
-  const frac=clockDur&&clockIv?leftMs/(clockDur*1000):0;
+  const end=S.phaseEndsAt||0,durS=S.phaseDur||0,leftMs=Math.max(0,end-Date.now()),running=end>0&&leftMs>0,left=Math.ceil(leftMs/1000);
+  const txt=Math.floor(left/60)+":"+String(left%60).padStart(2,"0"),low=running&&left<=(durS>=120?30:10),frac=running&&durS?leftMs/(durS*1000):0;
   document.querySelectorAll("[data-clock]").forEach(e=>e.textContent=txt);
-  $("#clockT").textContent=txt;$("#clockT").classList.toggle("low",low);
-  const mr=$("#miniRing");mr.classList.toggle("low",low);mr.querySelector(".fgc").setAttribute("stroke-dashoffset",(119.4*(1-frac)).toFixed(1));
-  const br=document.querySelector(".bigring");if(br){br.classList.toggle("low",low);br.querySelector(".fgc").setAttribute("stroke-dashoffset",(408.4*(1-frac)).toFixed(1))}
-  if(clockIv&&left===0){clearInterval(clockIv);clockIv=null;if(S.phase==="abierto"){setPhase("cerrado");toast("Mercado cerrado. Ahora registra los tickets del buzón.")}else if(S.phase==="analisis"){toast("Terminó el análisis. Abre el mercado.")}}
+  const ct=$("#clockT");if(ct){ct.textContent=txt;ct.classList.toggle("low",low)}
+  const mr=$("#miniRing");if(mr){mr.classList.toggle("low",low);mr.querySelector(".fgc").setAttribute("stroke-dashoffset",(119.4*(1-frac)).toFixed(1))}
+  document.querySelectorAll(".bigring").forEach(br=>{br.classList.toggle("low",low);br.querySelector(".fgc").setAttribute("stroke-dashoffset",(408.4*(1-frac)).toFixed(1))});
+  if(end>0&&leftMs===0){clearInterval(clockIv);clockIv=null;
+    if(MODE!=="team"){S.phaseEndsAt=0;if(S.phase==="abierto"){S.phase="cerrado";save();render();toast("Mercado cerrado. Ahora registra los tickets del buzón.")}else{save();if(S.phase==="analisis")toast("Terminó el análisis. Abre el mercado.")}}}
+  else if(!running&&clockIv){clearInterval(clockIv);clockIv=null}
 }
 
 /* ---------- Strip ---------- */
@@ -549,13 +587,18 @@ function renderStrip(){
   $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${l}</button>`).join("");
   TABS.forEach(([k])=>$("#desk-"+k).hidden=S.tab!==k)}
 function setPhase(p){S.phase=p;save();render()}
+function stateBox(){const flag=S.phase==="abierto"?["open","Mercado abierto"]:S.phase==="cerrado"?["closed","Mercado cerrado"]:S.phase==="analisis"?["idle","Analicen"]:["idle","Noticia"];
+  return `<div class="card statebox"><div class="bigring"><svg viewBox="0 0 150 150" aria-hidden="true"><circle class="bgc" cx="75" cy="75" r="65" fill="none" stroke-width="14"/><circle class="fgc" cx="75" cy="75" r="65" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="408.4" stroke-dashoffset="408.4"/></svg><div class="t" data-clock>0:00</div></div><span class="flag ${flag[0]}">${flag[1]}</span></div>`}
 
 /* ---------- Mercado ---------- */
 function priceTip(i){return `<b>Ronda ${i} · ${ROUNDS[i].tag}</b>`+ASSETS.map(a=>`<div class='r'><span>${swatch(a.c)}${a.n}</span><b>$${fmt(price(a.k,i))}</b></div>`).join("")}
 function renderMercado(){
   const r=S.round,R=ROUNDS[r],nCols=maxRound()+1;
-  const flag=S.phase==="abierto"?["open","Mercado abierto"]:S.phase==="cerrado"?["closed","Mercado cerrado"]:S.phase==="analisis"?["idle","Analicen"]:["idle","Noticia"];
-  const tickers=ASSETS.map(a=>{const p=price(a.k,r),prev=r?price(a.k,r-1):p,ch=pct(p,prev);
+  const tickers=tickersHTML(r);
+  const moves=r?divergingBars(ASSETS.map(a=>({name:a.n,color:a.c,v:pct(price(a.k,r),price(a.k,r-1)),extra:`$${fmt(price(a.k,r-1))} → $${fmt(price(a.k,r))}`}))):`<div class="empty">En la Ronda 0 cada activo parte de su precio inicial. Desde la Ronda 1 aquí verás cuánto se movió cada uno.</div>`;
+  return renderMercado2(r,R,nCols,tickers,moves)}
+function tickersHTML(r){const nCols=maxRound()+1;
+  return ASSETS.map(a=>{const p=price(a.k,r),prev=r?price(a.k,r-1):p,ch=pct(p,prev);
     const v=PRICES[a.k].slice(0,r+1),mn=Math.min(...PRICES[a.k].slice(0,nCols)),mx=Math.max(...PRICES[a.k].slice(0,nCols));
     const X=i=>4+i*(212/(nCols-1)),Y=x=>42-(x-mn)/((mx-mn)||1)*38;
     const sp=v.length>1?`<svg viewBox="0 0 220 46" aria-hidden="true"><polygon points="${X(0)},46 ${v.map((x,i)=>X(i)+","+Y(x)).join(" ")} ${X(v.length-1)},46" fill="${a.c}" fill-opacity=".12"/><polyline points="${v.map((x,i)=>X(i)+","+Y(x)).join(" ")}" fill="none" stroke="${a.c}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="4.5" fill="${a.c}" stroke="var(--surface)" stroke-width="2"/></svg>`:`<svg viewBox="0 0 220 46" aria-hidden="true"><line x1="4" x2="216" y1="23" y2="23" stroke="${a.c}" stroke-width="2.5" stroke-dasharray="2 6" stroke-linecap="round"/></svg>`;
@@ -563,8 +606,8 @@ function renderMercado(){
       <div class="sym"><b>$${a.sym}</b><span class="lbl">Riesgo ${a.risk}</span></div>
       <div class="nm">${a.n}</div><div class="px" style="${p>=10000?"font-size:clamp(26px,2.6vw,36px)":""}">$${fmt(p)}</div>
       <span class="chg ${r?chgCls(ch):"z"}">${r?arrow(ch)+" "+pctLabel(ch):"Precio inicial"}</span>${sp}
-      <div class="muted num" style="font-size:12px">Desde el inicio ${pctLabel(pct(p,PRICES[a.k][0]))}</div></div></div>`}).join("");
-  const moves=r?divergingBars(ASSETS.map(a=>({name:a.n,color:a.c,v:pct(price(a.k,r),price(a.k,r-1)),extra:`$${fmt(price(a.k,r-1))} → $${fmt(price(a.k,r))}`}))):`<div class="empty">En la Ronda 0 todos los activos valen $100. Desde la Ronda 1 aquí verás cuánto se movió cada uno.</div>`;
+      <div class="muted num" style="font-size:12px">Desde el inicio ${pctLabel(pct(p,PRICES[a.k][0]))}</div></div></div>`}).join("")}
+function renderMercado2(r,R,nCols,tickers,moves){
   const line=lineChart({series:ASSETS.map(a=>({id:a.k,name:a.n,short:a.sym,color:a.c,vals:PRICES[a.k].slice(0,nCols)})),upto:r,nCols,yfmt:v=>"$"+kfmt(v),tipFn:priceTip});
   // heatmap
   let heat=`<div class="heat" style="grid-template-columns:130px repeat(${nCols-1},minmax(0,1fr))"><div></div>`;
@@ -580,7 +623,8 @@ function renderMercado(){
     rank=`<div class="card" style="margin-top:18px"><div class="card-h"><h2>Carrera de patrimonio · R${r}</h2><div class="legend">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.n}</span>`).join("")}<span>${swatch("var(--cash)")}Efectivo</span><span><i class="sw" style="background:var(--ink);width:2px;height:12px"></i>Capital inicial</span></div></div><div class="chartwrap">${hBars(rows,{w:760,ref:CAPITAL,max:Math.max(...rows.map(x=>x.total),CAPITAL)*1.05})}</div></div>`}
   $("#desk-mercado").innerHTML=`
    <div class="hero"><div class="hero-main"><div class="lbl">Ronda ${r}${r===7?" · bonus":""} de ${maxRound()}</div><h1>${R.t}</h1><div class="newsbox">${esc(R.news)}</div></div>
-     <div class="card statebox"><div class="bigring" id="bigRing"><svg viewBox="0 0 150 150" aria-hidden="true"><circle class="bgc" cx="75" cy="75" r="65" fill="none" stroke-width="14"/><circle class="fgc" cx="75" cy="75" r="65" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="408.4" stroke-dashoffset="408.4"/></svg><div class="t" data-clock>0:00</div></div><span class="flag ${flag[0]}">${flag[1]}</span></div></div>
+     ${stateBox()}</div>
+   ${FB&&NET==="on"&&S.showQR?accessCard():""}
    <div class="tickers">${tickers}</div>
    <div class="cols-2">
      <div class="card"><div class="card-h"><h2>Así se movió esta ronda</h2><p>Variación de cada activo respecto a R${Math.max(0,r-1)}</p></div><div class="chartwrap">${moves}</div></div>
@@ -588,7 +632,7 @@ function renderMercado(){
    </div>
    <div class="card" style="margin-top:18px"><div class="card-h"><h2>El mercado ronda a ronda</h2><div class="legend">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.n}</span>`).join("")}</div></div><div class="chartwrap">${line}</div></div>
    ${rank}
-   <div class="toolbar" style="margin-top:16px"><button id="toggleRank" class="${S.hideRank?"pop":""}">${S.hideRank?"Mostrar carrera de patrimonio":"Ocultar carrera de patrimonio"}</button><span class="muted" style="font-size:13px">El precio publicado ya incorpora la noticia. Todas las órdenes se ejecutan a este precio.</span></div>`}
+   <div class="toolbar" style="margin-top:16px"><button id="toggleRank" class="${S.hideRank?"pop":""}">${S.hideRank?"Mostrar carrera de patrimonio":"Ocultar carrera de patrimonio"}</button>${FB&&NET==="on"?`<button id="toggleQR">${S.showQR?"Ocultar acceso de equipos":"Mostrar acceso de equipos"}</button>`:""}<span class="muted" style="font-size:13px">El precio publicado ya incorpora la noticia. Todas las órdenes se ejecutan a este precio.</span></div>`;drawQR()}
 
 /* ---------- Broker ---------- */
 let T={team:null,side:"BUY",asset:null,qty:"",reason:"",rm:false};
@@ -646,22 +690,24 @@ function renderBroker(){
   let held="";
   if(T.team){const L=ledger(T.team,Math.min(r,6));held=ASSETS.filter(a=>L.h[a.k]).map(a=>`<span class="tag">${swatch(a.c)}${a.sym} ${L.h[a.k]}</span>`).join(" ")||'<span class="muted">Sin posiciones todavía.</span>'}
   const card=CARDS[r];const recent=S.trades.filter(t=>t.round===r).slice(-8).reverse();
-  $("#desk-broker").innerHTML=`<div class="desk-cols">
-   <form class="card ticket" id="ticketForm" autocomplete="off">
+  const teamMode=MODE==="team",marketOpen=S.phase==="abierto"&&(!S.phaseEndsAt||S.phaseEndsAt>Date.now());
+  const form=`<form class="card ticket" id="ticketForm" autocomplete="off">
      <div><div class="lbl">Ticket · Ronda ${r}</div><h2 style="font-size:22px;margin-top:4px">${can?"Nueva orden":"Ronda sin negociación"}</h2></div>
-     ${can&&(S.phase==="noticia"||S.phase==="analisis")?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">El mercado de esta ronda aún no abre. Puedes registrar tickets, pero los equipos todavía no deberían entregarlos.</div>`:""}
+     ${teamMode?(can&&!marketOpen?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">${S.phase==="cerrado"?"El mercado de esta ronda ya cerró.":"El mercado aún no abre."} Pueden preparar la orden y enviarla cuando el facilitador abra el mercado.</div>`:""):(can&&(S.phase==="noticia"||S.phase==="analisis")?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">El mercado de esta ronda aún no abre. Puedes registrar tickets, pero los equipos todavía no deberían entregarlos.</div>`:"")}
      ${can?"":`<div class="verdict no">La ronda de 5 años solo se revela. Vuelve a R6 para corregir órdenes.</div>`}
      <div class="seg" role="group" aria-label="Operación"><button type="button" class="buy" data-side="BUY" aria-pressed="${T.side==="BUY"}">▲ Comprar</button><button type="button" class="sell" data-side="SELL" aria-pressed="${T.side==="SELL"}">▼ Vender</button></div>
      <div><div class="lbl" style="margin-bottom:8px">Activo · precio de la ronda</div><div class="assetpick">${assetBtns}</div></div>
      <div class="two"><label class="f"><span class="lbl">Cantidad</span><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="${esc(T.qty)}" placeholder="Unidades enteras"></label>
-       <label class="f"><span class="lbl">Equipo</span><select id="teamSel"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${T.team===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label></div>
+       ${teamMode?`<div class="f"><span class="lbl">Equipo</span><div style="font-weight:800;font-size:17px;padding:10px 0">${esc(tn(T.team))}</div></div>`:`<label class="f"><span class="lbl">Equipo</span><select id="teamSel"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${T.team===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label>`}</div>
      <label class="f"><span class="lbl">Razón (1 línea)</span><input id="reason" type="text" maxlength="120" value="${esc(T.reason)}" placeholder="Ej.: Kaiman confirma ventas +30%"></label>
      <label class="check"><input id="rm" type="checkbox" ${T.rm?"checked":""}> Firmado por el Risk Manager</label>
      ${T.team?`<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="lbl">${esc(tn(T.team))} tiene</span>${held}</div>`:""}
      ${prev}
-     ${showV?`<div class="verdict ${c.ok?"ok":"no"}">${c.ok?"✓ Orden válida. Lista para ejecutar.":"✕ "+esc(c.why)}</div>`:""}
-     <div class="toolbar"><button type="submit" class="primary" ${c.ok&&can?"":"disabled"}>Ejecutar orden</button><button type="button" id="rejectBtn" ${showV&&!c.ok&&can?"":"disabled"}>Registrar rechazo</button><button type="button" id="clearBtn" class="ghost">Limpiar</button></div>
-   </form>
+     ${showV?`<div class="verdict ${c.ok?"ok":"no"}">${c.ok?(teamMode?(marketOpen?"✓ Orden válida. Lista para enviar.":"✓ Orden válida. Espera a que abra el mercado."):"✓ Orden válida. Lista para ejecutar."):"✕ "+esc(c.why)}</div>`:""}
+     <div class="toolbar">${teamMode?`<button type="submit" class="primary" ${c.ok&&can&&marketOpen&&!busy?"":"disabled"}>${busy?"Enviando…":"Enviar orden"}</button>`:`<button type="submit" class="primary" ${c.ok&&can&&!busy?"":"disabled"}>Ejecutar orden</button><button type="button" id="rejectBtn" ${showV&&!c.ok&&can?"":"disabled"}>Registrar rechazo</button>`}<button type="button" id="clearBtn" class="ghost">Limpiar</button></div>
+   </form>`;
+  if(teamMode)return form;
+  $("#desk-broker").innerHTML=`<div class="desk-cols">${form}
    <div class="grid">
      ${T.team?walletCard(T.team,r):""}
      <div class="card"><div class="card-h"><h2>${T.team?"Cambiar de equipo":"Elige el equipo"}</h2><div class="legend">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.sym}</span>`).join("")}<span>${swatch("var(--cash)")}Efectivo</span></div></div><div class="teamgrid">${chips}</div></div>
@@ -673,7 +719,15 @@ function renderBroker(){
        ${r<maxRound()?`<div style="display:flex;flex-wrap:wrap;gap:6px"><span class="lbl" style="align-self:center">Próxima ronda</span>${ASSETS.map(a=>{const ch=pct(price(a.k,r+1),price(a.k,r));return `<span class="tag">${swatch(a.c)}${a.sym} $${fmt(price(a.k,r+1))} <span class="${ch>=0?"up":"down"}">${arrow(ch)}</span></span>`}).join("")}</div>`:""}
      </div></details>
    </div></div>`}
-function executeTicket(status,why){
+let busy=false;
+async function executeTicket(status,why){
+  if(FB&&NET==="on"){
+    const o={team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm,reason:T.reason.trim()};busy=true;render();
+    try{const t=await executeRemote(o,status,why,MODE==="team"?"equipo":"broker");
+      toast(status==="ejecutado"?`✓ ${tn(t.team)} ${t.side==="BUY"?"compra":"vende"} ${t.qty} ${an(t.asset)} a $${fmt(t.price)}`:`Rechazo registrado: ${why}`);
+      T={team:T.team,side:T.side,asset:null,qty:"",reason:"",rm:false}}
+    catch(e){toast("No se ejecutó: "+(e&&e.message||"error de conexión"))}
+    busy=false;render();return}
   const r=S.round,p=price(T.asset,r);S.seq++;
   S.trades.push({id:S.seq,team:T.team,round:r,side:T.side,asset:T.asset,qty:Number(T.qty),price:p,fee:status==="ejecutado"?S.settings.fee:0,reason:T.reason.trim(),rm:T.rm,status,why:why||"",ts:Date.now()});save();
   toast(status==="ejecutado"?`✓ ${tn(T.team)} ${T.side==="BUY"?"compra":"vende"} ${T.qty} ${an(T.asset)} a $${fmt(p)}`:`Rechazo registrado: ${why}`);
@@ -762,14 +816,14 @@ function renderRegistro(){
      <div class="toolbar"><button id="csvBtn" data-dl>Descargar CSV</button><button id="jsonBtn" data-dl class="pop">Guardar respaldo</button></div>
      <label class="f"><span class="lbl">Restaurar un respaldo (.json)</span><input id="restore" type="file" accept=".json,application/json"></label></div></div></div>
    <div class="card flat"><div class="card-h"><h2>Registro maestro</h2><p>${S.trades.length} tickets</p></div>
-   ${pendingVoid?`<div class="confirm" style="margin-bottom:12px">¿Anular la orden #${pendingVoid}? Úsalo solo para corregir errores de digitación. <button id="voidYes" class="danger">Anular</button><button id="voidNo" class="ghost">Cancelar</button></div>`:""}
+   ${pendingVoid?`<div class="confirm" style="margin-bottom:12px">¿Anular la orden #${pendingVoid}? Úsalo solo para corregir errores de digitación${FB&&NET==="on"?", idealmente con el mercado cerrado":""}. <button id="voidYes" class="danger">Anular</button><button id="voidNo" class="ghost">Cancelar</button></div>`:""}
    ${list.length?`<div class="tablewrap"><table><thead><tr><th>#</th><th>R</th><th>Equipo</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Monto</th><th>RM</th><th>Razón</th><th>Estado</th><th></th></tr></thead><tbody>
    ${list.map(t=>`<tr><td class="num">${t.id}</td><td class="num">${t.round}</td><td>${esc(tn(t.team))}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${t.price}</td><td class="r num">$${fmt(t.qty*t.price)}</td><td>${t.rm?"✓":"—"}</td><td style="min-width:180px">${esc(t.reason)||'<span class="muted">Sin razón</span>'}</td><td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn">Rechazada</span><div class="muted" style="font-size:12px">${esc(t.why)}</div>`}</td><td><button class="ghost" data-void="${t.id}" style="padding:4px 10px;font-size:12px">Anular</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">El registro está vacío. Cada ticket que ejecutes o rechaces en la Mesa del Broker queda aquí.</div>`}</div>`}
 
 /* ---------- Ajustes ---------- */
 let pendingReset=false;
 function renderAjustes(){const st=S.settings;
-  $("#desk-ajustes").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))">
+  $("#desk-ajustes").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))">${onlineCard()}
    <div class="card"><div class="card-h"><h2>Equipos</h2><p>${S.teams.length} de 10</p></div><div class="grid" style="gap:10px">${S.teams.map((t,i)=>`<label class="f"><span class="lbl">Equipo ${i+1}</span><input id="tname-${t.id}" data-tname="${t.id}" value="${esc(t.name)}"></label>`).join("")}</div>
      <div class="toolbar" style="margin-top:14px"><button id="addTeam" ${S.teams.length>=10?"disabled":""}>+ Agregar equipo</button><button id="delTeam" class="ghost" ${S.teams.length<=2||S.trades.some(x=>x.team===S.teams[S.teams.length-1].id)?"disabled":""}>Quitar el último</button></div></div>
    <div class="card"><div class="card-h"><h2>Reglas del mercado</h2></div><div class="grid" style="gap:14px">
@@ -785,7 +839,7 @@ function renderAjustes(){const st=S.settings;
      <button id="demoBtn" class="pop">Cargar partida de ejemplo</button>
      <p class="muted" style="margin:0;font-size:13px">Seis equipos con las estrategias de referencia de la guía (contrarian, fundamentos, conservador, diversificado, apostador y FOMO + pánico), jugados hasta la Ronda 6. Útil para ensayar el debrief.</p>
      ${pendingReset?`<div class="confirm">Se borrarán todas las órdenes y se volverá a R0. <button id="resetYes" class="danger">Borrar y reiniciar</button><button id="resetNo" class="ghost">Cancelar</button></div>`:`<button id="resetBtn" class="danger">Nueva partida</button>`}
-     <p class="muted" style="margin:0;font-size:13px">Atajos: flechas ← → cambian de ronda.</p></div></div></div>`}
+     <p class="muted" style="margin:0;font-size:13px">Atajos: flechas ← → cambian de ronda.</p></div></div></div>`;drawQR()}
 
 /* ---------- Demo ---------- */
 function loadDemo(){S=freshState(6);
@@ -820,8 +874,111 @@ document.addEventListener("focusin",e=>{const el=e.target.closest&&e.target.clos
 document.addEventListener("focusout",()=>tip.hidden=true);
 document.addEventListener("scroll",()=>tip.hidden=true,true);
 
+/* ---------- Team screen ---------- */
+let joinErr="";
+function renderTeam(){
+  const el=$("#desk-team");
+  if(NET!=="on"){el.innerHTML=`<div class="join card"><h2>Conectando con el mercado…</h2><p class="muted" style="margin:0">${NET==="err"?"No se pudo conectar. Revisa el enlace o la conexión a internet y recarga la página.":"Un momento."}</p></div>`;return}
+  const me=S.teams.find(t=>t.id===T.team);
+  if(!me){el.innerHTML=`<form class="join card" id="joinForm" autocomplete="off"><div><div class="lbl" style="color:var(--cyan)">Smart Market · ingreso del equipo</div><h2 style="font-size:28px;margin-top:6px">¿Qué equipo son?</h2></div>
+     <label class="f"><span class="lbl">Equipo</span><select id="joinTeam"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${QS.get("equipo")===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label>
+     <label class="f"><span class="lbl">PIN del equipo</span><input id="joinPin" type="text" inputmode="numeric" maxlength="6" placeholder="4 dígitos que da el facilitador"></label>
+     ${joinErr?`<div class="verdict no">${esc(joinErr)}</div>`:""}
+     <button type="submit" class="primary" style="min-height:52px;font-size:17px">Entrar</button></form>`;return}
+  const r=S.round,R=ROUNDS[r],L=ledger(me.id,Math.min(r,6));
+  const mine=S.trades.filter(t=>t.team===me.id).slice().reverse();
+  el.innerHTML=`<div class="team-head"><div><div class="lbl" style="color:var(--cyan)">Pantalla del equipo</div><div class="team-name">${esc(me.name)}</div></div>
+     <div class="toolbar"><span class="netpill on"><i></i>En línea</span><button id="leaveTeam" class="ghost">Cambiar de equipo</button></div></div>
+   <div class="hero"><div class="hero-main"><div class="lbl">Ronda ${r}${r===7?" · bonus":""} de ${maxRound()}</div><h1>${R.t}</h1><div class="newsbox">${esc(R.news)}</div></div>${stateBox()}</div>
+   <div class="tickers">${tickersHTML(r)}</div>
+   <div class="desk-cols">${renderBroker()}<div class="grid">${walletCard(me.id,r)}
+     <div class="card flat"><div class="card-h"><h2>Nuestras órdenes</h2><p>${mine.length} en total</p></div>
+     ${mine.length?`<div class="tablewrap"><table><thead><tr><th>R</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th>Razón</th></tr></thead><tbody>${mine.map(t=>`<tr><td class="num">${t.round}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${fmt(t.price)}</td><td>${esc(t.reason)||'<span class="muted">—</span>'}${t.status!=="ejecutado"?` <span class="pill warn">Rechazada</span>`:""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Todavía no envían órdenes. Cuando el mercado abra, la orden que envíen aparecerá aquí.</div>`}</div></div></div>`}
+
+/* ---------- Online (Firebase) ---------- */
+const DEFAULT_CFG={apiKey:"AIzaSyAf0yRSsv5jAOnkcDwlTxNslY8ucB9azR4",authDomain:"ksmart-478e8.firebaseapp.com",projectId:"ksmart-478e8",appId:"1:334293663998:web:e4224025476bc4025aa5af"};
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const dec=t=>JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,"+").replace(/_/g,"/")))));
+function parseCfg(txt){const m=String(txt).match(/\{[\s\S]*\}/);if(!m)throw new Error("No encuentro la configuración entre llaves { }.");
+  let j=m[0].replace(/([{,]\s*)([A-Za-z0-9_]+)\s*:/g,'$1"$2":').replace(/'/g,'"').replace(/,\s*}/g,"}");const c=JSON.parse(j);
+  if(!c.apiKey||!c.projectId)throw new Error("Faltan apiKey o projectId.");return {apiKey:c.apiKey,authDomain:c.authDomain,projectId:c.projectId,appId:c.appId}}
+function sharedOf(o){const x={};SHARED.forEach(k=>x[k]=o[k]===undefined?null:o[k]);return x}
+function fbInit(cfg){if(!window.firebase)throw new Error("Firebase no está disponible en esta versión. Usa la versión publicada en GitHub.");
+  const name="smc";const app=(firebase.apps||[]).find(a=>a.name===name)||firebase.initializeApp(cfg,name);return app.firestore()}
+function teamLink(id){if(!FB)return "";return location.origin+location.pathname+"?juego="+FB.gameId+"&cfg="+enc(FB.cfg)+(id?"&equipo="+id:"")}
+function pin4(){return String(Math.floor(1000+Math.random()*9000))}
+function ensurePins(){let ch=false;S.teams.forEach(t=>{if(!t.pin){t.pin=pin4();ch=true}});return ch}
+function subscribe(){
+  const g=FB.gameRef;FB.unsub.forEach(u=>u());FB.unsub=[];
+  FB.unsub.push(g.onSnapshot(sn=>{if(!sn.exists){NET="err";safeRender();return}const d=sn.data();
+    if(!pushPending)SHARED.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)S[k]=d[k]});S.seq=Math.max(S.seq||0,d.seq||0);lastGameJSON=JSON.stringify(sharedOf(S));
+    NET="on";if(MODE!=="team")try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+    ensureClock();safeRender()},err=>{NET="err";safeRender()}));
+  FB.unsub.push(g.collection("trades").onSnapshot(sn=>{
+    if(MODE!=="team"&&FB.seen)sn.docChanges().forEach(c=>{const t=c.doc.data();if(c.type==="added"&&t.src==="equipo")toast(`${tn(t.team)} ${t.side==="BUY"?"compró":"vendió"} ${t.qty} ${A(t.asset).sym} a $${fmt(t.price)}`)});
+    FB.seen=true;S.trades=sn.docs.map(d=>d.data()).sort((a,b)=>a.id-b.id);lastTrades={};S.trades.forEach(t=>lastTrades[t.id]=JSON.stringify(t));
+    if(MODE!=="team")try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+    safeRender()},err=>{NET="err";safeRender()}));
+}
+async function pushRemote(){
+  if(!FB||NET!=="on")return;pushPending=false;const g=FB.gameRef,b=FB.db.batch();let n=0;
+  const sh=sharedOf(S),js=JSON.stringify(sh);
+  const now={};S.trades.forEach(t=>now[t.id]=JSON.stringify(t));let tradesChanged=false;
+  Object.keys(now).forEach(id=>{if(lastTrades[id]!==now[id]){b.set(g.collection("trades").doc(String(id).padStart(6,"0")),JSON.parse(now[id]));n++;tradesChanged=true}});
+  Object.keys(lastTrades).forEach(id=>{if(!(id in now)){b.delete(g.collection("trades").doc(String(id).padStart(6,"0")));n++;tradesChanged=true}});
+  if(tradesChanged){S.teams.forEach(t=>{b.set(g.collection("teams").doc(t.id),teamDoc(t.id));n++});
+    const mx=Math.max(0,...S.trades.map(t=>t.id));sh.seq=Math.max(S.seq||0,mx);}
+  if(js!==lastGameJSON||tradesChanged){b.set(g,sh,{merge:true});n++}
+  if(!n)return;lastGameJSON=js;lastTrades=now;
+  try{await b.commit()}catch(e){toast("No se pudo sincronizar: "+(e.message||"sin conexión"))}
+}
+async function executeRemote(o,status,why,source){
+  const g=FB.gameRef;
+  return FB.db.runTransaction(async tx=>{
+    const gs=await tx.get(g);const G=gs.data();const tRef=g.collection("teams").doc(o.team);const ts=await tx.get(tRef);
+    const L=ts.exists?ts.data():emptyL();const r=G.round;
+    if(r>6)throw new Error("Esta ronda no se negocia.");
+    if(source==="equipo"&&(G.phase!=="abierto"||(G.phaseEndsAt&&Date.now()>G.phaseEndsAt+3000)))throw new Error("El mercado está cerrado.");
+    if(status==="ejecutado"){const v=validate(L,o,r,G.settings);if(!v.ok)throw new Error(v.why)}
+    const id=(G.seq||0)+1,p=price(o.asset,r),fee=status==="ejecutado"?G.settings.fee:0;
+    const t={id,team:o.team,round:r,side:o.side,asset:o.asset,qty:o.qty,price:p,fee,reason:o.reason||"",rm:!!o.rm,status,why:why||"",ts:Date.now(),src:source};
+    if(status==="ejecutado"){applyTrade(L,t);tx.set(tRef,{cash:L.cash,h:L.h,cost:L.cost})}
+    tx.update(g,{seq:id});tx.set(g.collection("trades").doc(String(id).padStart(6,"0")),t);return t})}
+async function goOnline(cfg,gameId,create){
+  NET="connecting";render();
+  try{const db=fbInit(cfg);FB={db,cfg,gameId,gameRef:db.collection("games").doc(gameId),unsub:[]};
+    if(create){ensurePins();const b=db.batch(),g=FB.gameRef;const sh=sharedOf(S);sh.seq=Math.max(S.seq||0,0,...S.trades.map(t=>t.id));sh.created=Date.now();b.set(g,sh);
+      S.trades.forEach(t=>b.set(g.collection("trades").doc(String(t.id).padStart(6,"0")),t));S.teams.forEach(t=>b.set(g.collection("teams").doc(t.id),teamDoc(t.id)));await b.commit()}
+    else{const sn=await FB.gameRef.get();if(!sn.exists)throw new Error("No existe un juego con ese código.")}
+    if(MODE!=="team")try{localStorage.setItem(KEY_ONLINE,JSON.stringify({cfg,gameId}))}catch(e){}
+    subscribe();if(create)toast("Juego en línea creado: "+gameId)}
+  catch(e){NET="err";FB=null;toast(e.message||"No se pudo conectar.");render()}}
+function goLocal(){if(FB)FB.unsub.forEach(u=>u());FB=null;NET="local";try{localStorage.removeItem(KEY_ONLINE)}catch(e){}save();render();toast("Volviste al modo local. La partida sigue en este navegador.")}
+function accessCard(){return `<div class="card" style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:22px;align-items:center">
+  <div class="qrbox" id="qrBox" aria-label="Código QR para entrar"></div>
+  <div style="flex:1 1 320px;min-width:0;display:grid;gap:10px"><div class="lbl" style="color:var(--cyan)">Acceso de los equipos</div>
+    <div class="codebig">${esc(FB.gameId)}</div><p style="margin:0;font-size:18px">Escaneen el código con la laptop o tablet del equipo, elijan su equipo y escriban su PIN.</p></div></div>`}
+function drawQR(){const box=$("#qrBox");if(!box)return;box.innerHTML="";if(window.QRCode){new QRCode(box,{text:teamLink(),width:220,height:220,colorDark:"#0A1430",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.L})}else box.innerHTML='<span style="color:#0A1430;font-size:13px;line-height:1.3;display:block;width:220px;padding:10px">Código QR no disponible. Comparte el enlace de los equipos.</span>'}
+function onlineCard(){
+  const has=!!window.firebase;let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY_ONLINE)||"null")}catch(e){}
+  if(FB&&NET==="on")return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2><span class="netpill on"><i></i>Conectado · ${esc(FB.gameId)}</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start"><div class="qrbox" id="qrBox"></div>
+    <div style="flex:1 1 360px;min-width:0;display:grid;gap:12px"><p style="margin:0">Cada equipo abre este enlace en su laptop o tablet, elige su equipo y escribe su PIN. Sus órdenes se ejecutan solas cuando el mercado está abierto y cumplen las reglas.</p>
+      <div class="linkbox" id="teamLinkBox">${esc(teamLink())}</div><div class="toolbar"><button id="copyLink" class="primary">Copiar enlace</button><button id="goLocal" class="ghost">Desconectar y volver a modo local</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Equipo</th><th>PIN</th><th>Enlace directo</th></tr></thead><tbody>${S.teams.map(t=>`<tr><td><b>${esc(t.name)}</b></td><td class="num" style="font-size:18px;font-weight:700">${esc(t.pin||"—")}</td><td><button class="ghost" data-copyteam="${t.id}" style="padding:4px 10px;font-size:12px;min-height:0">Copiar enlace del equipo</button></td></tr>`).join("")}</tbody></table></div></div></div></div>`;
+  return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2><span class="netpill ${NET==="err"?"err":""}"><i></i>${NET==="connecting"?"Conectando…":NET==="err"?"Sin conexión":"Modo local"}</span></div>
+    ${has?`<div style="display:grid;gap:12px;max-width:760px"><p style="margin:0">Pega la configuración web de tu proyecto de Firebase (Configuración del proyecto → Tus apps → SDK de Firebase). Se guarda solo en este navegador y viaja en el enlace de los equipos.</p>
+      <label class="f"><span class="lbl">Configuración de Firebase</span><textarea id="fbCfg" placeholder="const firebaseConfig = { apiKey: &quot;…&quot;, authDomain: &quot;…&quot;, projectId: &quot;…&quot;, appId: &quot;…&quot; };">${esc(JSON.stringify(saved?saved.cfg:DEFAULT_CFG,null,1))}</textarea></label>
+      <div class="toolbar"><button id="createOnline" class="primary">Crear juego en línea con esta partida</button>${saved?`<button id="reconnect">Reconectar a ${esc(saved.gameId)}</button>`:""}</div>
+      <p class="muted" style="margin:0;font-size:13px">Al crear el juego se suben los equipos, las reglas y las órdenes actuales, y cada equipo recibe un PIN de 4 dígitos.</p></div>`
+    :`<p class="muted" style="margin:0">El juego en línea funciona en la versión publicada en GitHub Pages. Esta vista trabaja en modo local.</p>`}</div>`}
+
 /* ---------- Render + events ---------- */
-function render(){renderStrip();({mercado:renderMercado,broker:renderBroker,equipos:renderEquipos,puntaje:renderPuntaje,registro:renderRegistro,ajustes:renderAjustes})[S.tab]();tip.hidden=true;tick()}
+function safeRender(){const a=document.activeElement;if(a&&a.matches&&a.matches("input,select,textarea")&&a.closest(".desk")){pendingRender=true;return}render()}
+document.addEventListener("focusout",()=>{if(pendingRender){pendingRender=false;setTimeout(()=>{const a=document.activeElement;if(!(a&&a.matches&&a.matches("input,select,textarea")))render();else pendingRender=true},0)}});
+function render(){document.body.classList.toggle("teammode",MODE==="team");
+  if(MODE==="team"){$("#logoSub").textContent="Pantalla del equipo";$("#roundBadge").textContent="R"+S.round;TABS.forEach(([k])=>$("#desk-"+k).hidden=true);$("#desk-team").hidden=false;renderTeam();tip.hidden=true;tick();return}
+  $("#desk-team").hidden=true;renderStrip();({mercado:renderMercado,broker:renderBroker,equipos:renderEquipos,puntaje:renderPuntaje,registro:renderRegistro,ajustes:renderAjustes})[S.tab]();tip.hidden=true;tick()}
 function goRound(d){const n=S.round+d;if(n<0||n>maxRound())return;S.round=n;S.phase="noticia";stopClock();T.asset=null;T.qty="";save();render()}
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.tab){S.tab=b.dataset.tab;save();render();return}
@@ -837,6 +994,12 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
     else{goRound(1);if(S.round===7){S.tab="mercado";save();render()}}
     return}
   if(b.id==="toggleRank"){S.hideRank=!S.hideRank;save();render();return}
+  if(b.id==="toggleQR"){S.showQR=!S.showQR;save();render();return}
+  if(b.id==="createOnline"){try{const cfg=parseCfg($("#fbCfg").value);const id="KS-"+Math.random().toString(36).slice(2,8).toUpperCase();goOnline(cfg,id,true)}catch(e){toast(e.message)}return}
+  if(b.id==="reconnect"){try{const sv=JSON.parse(localStorage.getItem(KEY_ONLINE));goOnline(sv.cfg,sv.gameId,false)}catch(e){toast("No hay un juego guardado.")}return}
+  if(b.id==="goLocal"){goLocal();return}
+  if(b.id==="copyLink"||b.dataset.copyteam){const txt=teamLink(b.dataset.copyteam||"");navigator.clipboard.writeText(txt).then(()=>toast("Enlace copiado.")).catch(()=>{const lb=$("#teamLinkBox");if(lb){lb.textContent=txt;const rg=document.createRange();rg.selectNodeContents(lb);const sl=getSelection();sl.removeAllRanges();sl.addRange(rg)}toast("Copia el enlace seleccionado.")});return}
+  if(b.id==="leaveTeam"){T.team=null;try{localStorage.removeItem(KEY_TEAM)}catch(e){}render();return}
   if(b.dataset.focus){S.focusTeam=S.focusTeam===b.dataset.focus?null:b.dataset.focus;save();render();window.scrollTo({top:0,behavior:"smooth"});return}
   if(b.dataset.team){T.team=b.dataset.team;render();return}
   if(b.dataset.side){T.side=b.dataset.side;render();return}
@@ -848,12 +1011,16 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
   if(b.id==="voidNo"){pendingVoid=null;render();return}
   if(b.id==="csvBtn"){saveFile("smart-market-registro.csv",csv());return}
   if(b.id==="jsonBtn"){saveFile("smart-market-respaldo.json",JSON.stringify(S,null,1));return}
-  if(b.id==="addTeam"){const n=S.teams.length+1;let id="t"+n;while(S.teams.some(t=>t.id===id))id+="x";S.teams.push({id,name:"Equipo "+n});save();render();return}
+  if(b.id==="addTeam"){const n=S.teams.length+1;let id="t"+n;while(S.teams.some(t=>t.id===id))id+="x";S.teams.push({id,name:"Equipo "+n,pin:pin4()});save();render();return}
   if(b.id==="delTeam"){S.teams.pop();save();render();return}
   if(b.id==="demoBtn"){loadDemo();return}
   if(b.id==="resetBtn"){pendingReset=true;render();return} if(b.id==="resetNo"){pendingReset=false;render();return}
   if(b.id==="resetYes"){const keep=S.teams.map(t=>t.name);S=freshState(keep.length);S.teams.forEach((t,i)=>t.name=keep[i]);pendingReset=false;stopClock();save();render();toast("Nueva partida lista en R0.");return}});
-document.addEventListener("submit",e=>{e.preventDefault();if(e.target.id!=="ticketForm")return;const c=check({team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm});if(c.ok)executeTicket("ejecutado")});
+document.addEventListener("submit",e=>{e.preventDefault();
+  if(e.target.id==="joinForm"){const id=$("#joinTeam").value,pin=$("#joinPin").value.trim(),t=S.teams.find(x=>x.id===id);
+    if(!t){joinErr="Elige tu equipo.";render();return}if(String(t.pin||"")!==pin){joinErr="El PIN no coincide. Pídelo al facilitador.";render();return}
+    joinErr="";T={team:id,side:"BUY",asset:null,qty:"",reason:"",rm:false};try{localStorage.setItem(KEY_TEAM,JSON.stringify({game:QS.get("juego"),team:id}))}catch(_){}render();return}
+  if(e.target.id!=="ticketForm")return;if(busy)return;const c=check({team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm});if(c.ok)executeTicket("ejecutado")});
 let reRender;
 document.addEventListener("input",e=>{const el=e.target;
   if(el.id==="qty"){T.qty=el.value.trim();clearTimeout(reRender);reRender=setTimeout(()=>{render();const q=$("#qty");if(q){q.focus();const v=q.value;q.value="";q.value=v}},300)}
@@ -872,8 +1039,11 @@ document.addEventListener("change",e=>{const el=e.target;
   else if(el.id==="sBonus"){S.settings.bonus=el.checked;if(!el.checked&&S.round>6)S.round=6;save();render()}
   else if(el.dataset.tname){render()}
   else if(el.id==="restore"&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d.teams||!d.trades)throw 0;S=d;save();render();toast("Respaldo restaurado.")}catch(_){toast("Ese archivo no es un respaldo de Smart Market.")}};fr.readAsText(el.files[0])}});
-document.addEventListener("keydown",e=>{if(e.target.matches("input,select,textarea"))return;if(e.key==="ArrowRight")goRound(1);if(e.key==="ArrowLeft")goRound(-1)});
-render();initDownloads();
+document.addEventListener("keydown",e=>{if(MODE==="team"||e.target.matches("input,select,textarea"))return;if(e.key==="ArrowRight")goRound(1);if(e.key==="ArrowLeft")goRound(-1)});
+if(MODE==="team"){try{const sv=JSON.parse(localStorage.getItem(KEY_TEAM)||"null");if(sv&&sv.game===QS.get("juego"))T.team=sv.team}catch(e){}
+  render();try{goOnline(dec(QS.get("cfg")||""),QS.get("juego"),false)}catch(e){NET="err";render()}}
+else{render();ensureClock();try{const sv=JSON.parse(localStorage.getItem(KEY_ONLINE)||"null");if(sv&&window.firebase)goOnline(sv.cfg,sv.gameId,false)}catch(e){}}
+initDownloads();
 })();
 </script>
 
