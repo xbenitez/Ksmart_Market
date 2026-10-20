@@ -880,16 +880,15 @@ document.addEventListener("focusout",()=>tip.hidden=true);
 document.addEventListener("scroll",()=>tip.hidden=true,true);
 
 /* ---------- Team screen ---------- */
-let joinErr="";
+let joinErr="",autoJoined=false;
+function joinTeam(id){T={team:id,side:"BUY",asset:null,qty:"",reason:"",rm:false};try{localStorage.setItem(KEY_TEAM,JSON.stringify({game:QS.get("juego"),team:id}))}catch(_){}render()}
 function renderTeam(){
   const el=$("#desk-team");
   if(!everOn&&!(NET==="on"&&S.teams.length)){el.innerHTML=`<div class="join card"><h2>${NET==="err"?"No se pudo entrar al mercado":"Conectando con el mercado…"}</h2><p class="muted" style="margin:0">${NET==="err"?esc(lastErr||"Revisa el enlace."):lastErr?"La red está lenta. Reintentando automáticamente…":"Un momento."}</p>${lastErr&&NET!=="err"?`<p class="muted" style="margin:0;font-size:13px">${esc(lastErr)}</p>`:""}</div>`;return}
   const me=S.teams.find(t=>t.id===T.team);
-  if(!me){el.innerHTML=`<form class="join card" id="joinForm" autocomplete="off"><div><div class="lbl" style="color:var(--cyan)">Smart Market · ingreso del equipo</div><h2 style="font-size:28px;margin-top:6px">¿Qué equipo son?</h2></div>
-     <label class="f"><span class="lbl">Equipo</span><select id="joinTeam"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${QS.get("equipo")===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label>
-     <label class="f"><span class="lbl">PIN del equipo</span><input id="joinPin" type="text" inputmode="numeric" maxlength="6" placeholder="4 dígitos que da el facilitador"></label>
-     ${joinErr?`<div class="verdict no">${esc(joinErr)}</div>`:""}
-     <button type="submit" class="primary" style="min-height:52px;font-size:17px">Entrar</button></form>`;return}
+  if(!me&&!autoJoined&&QS.get("equipo")&&S.teams.some(t=>t.id===QS.get("equipo"))){autoJoined=true;joinTeam(QS.get("equipo"));return}
+  if(!me){el.innerHTML=`<div class="join card" style="max-width:720px"><div><div class="lbl" style="color:var(--cyan)">Smart Market · ingreso del equipo</div><h2 style="font-size:28px;margin-top:6px">¿Qué equipo son?</h2><p class="muted" style="margin:6px 0 0">Toquen el nombre de su equipo.</p></div>
+     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px">${S.teams.map(t=>`<button type="button" class="primary" data-jointeam="${t.id}" style="min-height:72px;font-size:20px;font-weight:800">${esc(t.name)}</button>`).join("")}</div></div>`;return}
   const r=S.round,R=ROUNDS[r],L=ledger(me.id,Math.min(r,6));
   const mine=S.trades.filter(t=>t.team===me.id).slice().reverse();
   el.innerHTML=`<div class="team-head"><div><div class="lbl" style="color:var(--cyan)">Pantalla del equipo</div><div class="team-name">${esc(me.name)}</div></div>
@@ -992,20 +991,20 @@ function goLocal(){if(FB)FB.unsub.forEach(u=>u());FB=null;NET="local";LAST=null;
 function accessCard(){return `<div class="card" style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:22px;align-items:center">
   <div class="qrbox" id="qrBox" aria-label="Código QR para entrar"></div>
   <div style="flex:1 1 320px;min-width:0;display:grid;gap:10px"><div class="lbl" style="color:var(--cyan)">Acceso de los equipos</div>
-    <div class="codebig">${esc(FB.gameId)}</div><p style="margin:0;font-size:18px">Escaneen el código con la laptop o tablet del equipo, elijan su equipo y escriban su PIN.</p></div></div>`}
+    <div class="codebig">${esc(FB.gameId)}</div><p style="margin:0;font-size:18px">Escaneen el código con la laptop o tablet del equipo, y toquen el nombre de su equipo.</p></div></div>`}
 function drawQR(){const box=$("#qrBox");if(!box)return;box.innerHTML="";if(window.QRCode){new QRCode(box,{text:teamLink(),width:220,height:220,colorDark:"#0A1430",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.L})}else box.innerHTML='<span style="color:#0A1430;font-size:13px;line-height:1.3;display:block;width:220px;padding:10px">Código QR no disponible. Comparte el enlace de los equipos.</span>'}
 function onlineCard(){
   const has=!!window.firebase;let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY_ONLINE)||"null")}catch(e){}
   if(FB&&(NET==="on"||NET==="connecting"))return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2>${NET==="on"&&!STALE?`<span class="netpill on"><i></i>Conectado · ${esc(FB.gameId)}</span>`:`<span class="netpill err"><i></i>Reconectando · ${esc(FB.gameId)}</span>`}</div>
     <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start"><div class="qrbox" id="qrBox"></div>
-    <div style="flex:1 1 360px;min-width:0;display:grid;gap:12px"><p style="margin:0">Cada equipo abre este enlace en su laptop o tablet, elige su equipo y escribe su PIN. Sus órdenes se ejecutan solas cuando el mercado está abierto y cumplen las reglas.</p>
-      <div class="linkbox" id="teamLinkBox">${esc(teamLink())}</div><div class="toolbar"><button id="copyLink" class="primary">Copiar enlace</button><button id="newPins">Generar PIN nuevos</button><button id="goLocal" class="ghost">Desconectar y volver a modo local</button></div>
-      <div class="tablewrap"><table><thead><tr><th>Equipo</th><th>PIN</th><th>Enlace directo</th></tr></thead><tbody>${S.teams.map(t=>`<tr><td><b>${esc(t.name)}</b></td><td class="num" style="font-size:18px;font-weight:700">${esc(t.pin||"—")}</td><td><button class="ghost" data-copyteam="${t.id}" style="padding:4px 10px;font-size:12px;min-height:0">Copiar enlace del equipo</button></td></tr>`).join("")}</tbody></table></div></div></div></div>`;
+    <div style="flex:1 1 360px;min-width:0;display:grid;gap:12px"><p style="margin:0">Cada equipo abre este enlace en su laptop o tablet, y toca el nombre de su equipo. Sus órdenes se ejecutan solas cuando el mercado está abierto y cumplen las reglas.</p>
+      <div class="linkbox" id="teamLinkBox">${esc(teamLink())}</div><div class="toolbar"><button id="copyLink" class="primary">Copiar enlace</button><button id="goLocal" class="ghost">Desconectar y volver a modo local</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Equipo</th><th>Enlace directo (entra sin elegir)</th></tr></thead><tbody>${S.teams.map(t=>`<tr><td><b>${esc(t.name)}</b></td><td><button class="ghost" data-copyteam="${t.id}" style="padding:4px 10px;font-size:12px;min-height:0">Copiar enlace del equipo</button></td></tr>`).join("")}</tbody></table></div></div></div></div>`;
   return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2><span class="netpill ${NET==="err"?"err":""}"><i></i>${NET==="connecting"?"Conectando…":NET==="err"?"Sin conexión":"Modo local"}</span></div>
     ${has?`<div style="display:grid;gap:12px;max-width:760px"><p style="margin:0">Pega la configuración web de tu proyecto de Firebase (Configuración del proyecto → Tus apps → SDK de Firebase). Se guarda solo en este navegador y viaja en el enlace de los equipos.</p>
       <label class="f"><span class="lbl">Configuración de Firebase</span><textarea id="fbCfg" placeholder="const firebaseConfig = { apiKey: &quot;…&quot;, authDomain: &quot;…&quot;, projectId: &quot;…&quot;, appId: &quot;…&quot; };">${esc(JSON.stringify(saved?saved.cfg:DEFAULT_CFG,null,1))}</textarea></label>
       <div class="toolbar"><button id="createOnline" class="primary">Crear juego en línea con esta partida</button>${saved?`<button id="reconnect">Reconectar a ${esc(saved.gameId)}</button>`:""}</div>
-      ${NET==="err"&&lastErr?`<div class="verdict no">${esc(lastErr)}</div>`:""}<p class="muted" style="margin:0;font-size:13px">Al crear el juego se suben los equipos, las reglas y las órdenes actuales, y cada equipo recibe un PIN de 4 dígitos.</p></div>`
+      ${NET==="err"&&lastErr?`<div class="verdict no">${esc(lastErr)}</div>`:""}<p class="muted" style="margin:0;font-size:13px">Al crear el juego se suben los equipos, las reglas y las órdenes actuales.</p></div>`
     :`<p class="muted" style="margin:0">El juego en línea funciona en la versión publicada en GitHub Pages. Esta vista trabaja en modo local.</p>`}</div>`}
 
 /* ---------- Render + events ---------- */
@@ -1033,7 +1032,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
   if(b.id==="createOnline"){try{const cfg=parseCfg($("#fbCfg").value);const id="KS-"+Math.random().toString(36).slice(2,8).toUpperCase();goOnline(cfg,id,true)}catch(e){toast(e.message)}return}
   if(b.id==="reconnect"){try{const sv=JSON.parse(localStorage.getItem(KEY_ONLINE));goOnline(sv.cfg,sv.gameId,false)}catch(e){toast("No hay un juego guardado.")}return}
   if(b.id==="goLocal"){goLocal();return}
-  if(b.id==="newPins"){S.teams.forEach(t=>t.pin=pin4());save();render();toast("PIN nuevos generados. Compártelos con cada equipo.");return}
+  if(b.dataset.jointeam){joinTeam(b.dataset.jointeam);return}
   if(b.id==="copyLink"||b.dataset.copyteam){const txt=teamLink(b.dataset.copyteam||"");navigator.clipboard.writeText(txt).then(()=>toast("Enlace copiado.")).catch(()=>{const lb=$("#teamLinkBox");if(lb){lb.textContent=txt;const rg=document.createRange();rg.selectNodeContents(lb);const sl=getSelection();sl.removeAllRanges();sl.addRange(rg)}toast("Copia el enlace seleccionado.")});return}
   if(b.id==="leaveTeam"){T.team=null;try{localStorage.removeItem(KEY_TEAM)}catch(e){}render();return}
   if(b.dataset.focus){S.focusTeam=S.focusTeam===b.dataset.focus?null:b.dataset.focus;save();render();window.scrollTo({top:0,behavior:"smooth"});return}
@@ -1053,9 +1052,6 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
   if(b.id==="resetBtn"){pendingReset=true;render();return} if(b.id==="resetNo"){pendingReset=false;render();return}
   if(b.id==="resetYes"){const keep=S.teams.map(t=>({name:t.name,pin:t.pin}));S=freshState(keep.length);S.teams.forEach((t,i)=>{t.name=keep[i].name;if(keep[i].pin)t.pin=keep[i].pin});pendingReset=false;stopClock();save();render();toast("Nueva partida lista en R0.");return}});
 document.addEventListener("submit",e=>{e.preventDefault();
-  if(e.target.id==="joinForm"){const id=$("#joinTeam").value,pin=$("#joinPin").value.trim(),t=S.teams.find(x=>x.id===id);
-    if(!t){joinErr="Elige tu equipo.";render();return}if(String(t.pin||"")!==pin){joinErr="El PIN no coincide. Pídelo al facilitador.";render();return}
-    joinErr="";T={team:id,side:"BUY",asset:null,qty:"",reason:"",rm:false};try{localStorage.setItem(KEY_TEAM,JSON.stringify({game:QS.get("juego"),team:id}))}catch(_){}render();return}
   if(e.target.id!=="ticketForm")return;if(busy)return;const c=check({team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm});if(c.ok)executeTicket("ejecutado")});
 let reRender;
 document.addEventListener("input",e=>{const el=e.target;
