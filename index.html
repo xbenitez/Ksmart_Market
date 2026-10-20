@@ -260,6 +260,14 @@ td.r,th.r{text-align:right}
 .team-name{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,3vw,40px)}
 .join{max-width:520px;margin:40px auto;display:grid;gap:16px}
 textarea{font:inherit;color:var(--ink);background:var(--sunk);border:2px solid #3A4C7C;border-radius:12px;padding:10px 12px;min-height:120px;width:100%;font-family:var(--f-mono);font-size:12px}
+.roundbig{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;background:var(--cyan);color:#0A1430;border-radius:var(--r);padding:16px 26px;margin-bottom:18px}
+.roundbig .rb-n{font-family:var(--f-display);font-weight:800;font-size:clamp(56px,10vw,120px);line-height:.9;letter-spacing:-.02em}
+.roundbig .rb-of{font-family:var(--f-display);font-weight:800;font-size:clamp(20px,2.6vw,30px);opacity:.75}
+.roundbig .rb-t{display:flex;flex-direction:column;gap:4px;min-width:0}
+.roundbig .rb-tag{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.roundbig .rb-title{font-family:var(--f-display);font-weight:800;font-size:clamp(24px,3.4vw,42px);line-height:1.05}
+.roundbig.flash{animation:rbflash 1.6s ease-out 1}
+@keyframes rbflash{0%{transform:scale(1.04);box-shadow:0 0 0 0 var(--cyan)}40%{box-shadow:0 0 0 14px transparent}100%{transform:none}}
 body.teammode .guide,body.teammode .tabs,body.teammode #roundCtl,body.teammode #tStop{display:none}
 /* Kruger School redesign */
 body{background-image:none}
@@ -314,6 +322,9 @@ input:focus,select:focus{border-color:var(--cyan)}
 .teamchip[aria-pressed="true"]{border-color:var(--accent);background:#1E2A5C;box-shadow:none}
 .cashmove,.preview{background:var(--sunk);border-radius:18px}
 .gauge,.capbar{background:#1C2B57;border:none}
+</head>
+<body>
+
 .kpi{background:var(--sunk);border-radius:14px}
 .rank-n{background:#1C2B57}.rank-n.g1{background:var(--accent);color:var(--accent-ink)}
 .pod .blk{border:none;box-shadow:none;border-radius:18px 18px 0 0}
@@ -322,9 +333,6 @@ input:focus,select:focus{border-color:var(--cyan)}
 details.key{border-color:var(--line);border-radius:20px}
 .stackbar{background:#1C2B57}
 </style>
-</head>
-<body>
-
 
 <div class="wrap">
   <header class="strip">
@@ -882,7 +890,7 @@ document.addEventListener("focusout",()=>tip.hidden=true);
 document.addEventListener("scroll",()=>tip.hidden=true,true);
 
 /* ---------- Team screen ---------- */
-let joinErr="",autoJoined=false;
+let joinErr="",autoJoined=false,seenRound=null;
 function joinTeam(id){T={team:id,side:"BUY",asset:null,qty:"",reason:"",rm:false};try{localStorage.setItem(KEY_TEAM,JSON.stringify({game:QS.get("juego"),team:id}))}catch(_){}render()}
 function renderTeam(){
   const el=$("#desk-team");
@@ -893,11 +901,13 @@ function renderTeam(){
      <label class="f"><span class="lbl">Equipo</span><select id="joinTeam" style="min-height:52px;font-size:18px"><option value="">Elegir equipo…</option>${S.teams.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select></label>
      ${joinErr?`<div class="verdict no">${esc(joinErr)}</div>`:""}
      <button type="button" id="joinGo" class="primary" style="min-height:56px;font-size:18px">Entrar</button></div>`;return}
-  const r=S.round,R=ROUNDS[r],L=ledger(me.id,Math.min(r,6));
+  const r=S.round,R=ROUNDS[r],flash=seenRound!==null&&seenRound!==r;seenRound=r;
   const mine=S.trades.filter(t=>t.team===me.id).slice().reverse();
   el.innerHTML=`<div class="team-head"><div><div class="lbl" style="color:var(--cyan)">Pantalla del equipo</div><div class="team-name">${esc(me.name)}</div></div>
      <div class="toolbar">${NET==="on"&&!STALE?'<span class="netpill on"><i></i>En línea</span>':'<span class="netpill err"><i></i>Reconectando…</span>'}<button id="leaveTeam" class="ghost">Cambiar de equipo</button></div></div>
-   <div class="hero"><div class="hero-main"><div class="lbl">Ronda ${r}${r===7?" · bonus":""} de ${maxRound()}</div><h1>${R.t}</h1><div class="newsbox">${esc(R.news)}</div></div>${stateBox()}</div>
+   <div class="roundbig ${flash?"flash":""}" role="status" aria-live="polite"><div><span class="lbl" style="color:inherit;opacity:.8">Ronda</span><div style="display:flex;align-items:baseline;gap:10px"><span class="rb-n">${r}</span><span class="rb-of">de ${maxRound()}</span></div></div>
+     <div class="rb-t">${R.tag!==R.t||r===7?`<span class="rb-tag">${esc(R.tag)}${r===7?" · bonus":""}</span>`:""}<span class="rb-title">${esc(R.t)}</span></div></div>
+   <div class="hero"><div class="hero-main"><div class="newsbox">${esc(R.news)}</div></div>${stateBox()}</div>
    <div class="tickers">${tickersHTML(r)}</div>
    <div class="desk-cols">${renderBroker()}<div class="grid">${walletCard(me.id,r)}
      <div class="card flat"><div class="card-h"><h2>Nuestras órdenes</h2><p>${mine.length} en total</p></div>
