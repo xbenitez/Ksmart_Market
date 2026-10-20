@@ -392,7 +392,7 @@ const dur=sec=>sec%60===0?(sec/60)+" min":sec>=60?Math.floor(sec/60)+" min "+(se
 const CAPITAL=10000, KEY="smc-broker-v1";
 
 /* ---------- State ---------- */
-function freshState(n){return {round:0,phase:"noticia",teams:Array.from({length:n||6},(_,i)=>({id:"t"+(i+1),name:"Equipo "+(i+1)})),trades:[],seq:0,phaseEndsAt:0,phaseDur:0,settings:{fee:10,cap:50,inflation:5,bonus:true,requireRM:true,analysisSec:60,marketSec:300},decision:{},hideRank:true,tab:"broker",focusTeam:null,showQR:false}}
+function freshState(n){return {round:0,phase:"noticia",teams:Array.from({length:n||6},(_,i)=>({id:"t"+(i+1),name:"Equipo "+(i+1)})),trades:[],seq:0,phaseEndsAt:0,phaseDur:0,settings:{fee:10,cap:50,inflation:5,bonus:true,requireRM:true,alwaysOpen:true,analysisSec:60,marketSec:300},decision:{},hideRank:true,tab:"broker",focusTeam:null,showQR:false}}
 let S;try{S=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){S=null}
 if(!S||!S.teams)S=freshState(6);
 const QS=new URLSearchParams(location.search);
@@ -402,12 +402,14 @@ const SHARED=["round","phase","phaseEndsAt","phaseDur","settings","teams","decis
 let FB=null;           // {db,gameRef,gameId,cfg,unsub:[]}
 let NET="local";       // local | connecting | on | err
 let lastGameJSON="",lastTrades={},pushT=null,pendingRender=false,pushPending=false;
+let OFF=0,everOn=false,STALE=false,retryT=null,retryN=0,LAST=null;const nowS=()=>Date.now()+OFF;
 if(MODE==="team"){S=freshState(0);S.tab="team"}
 function save(){
   if(MODE==="team")return;
   try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-  if(FB&&NET==="on"){ensurePins();pushPending=true;clearTimeout(pushT);pushT=setTimeout(pushRemote,120)}
+  if(FB){ensurePins();pushPending=true;clearTimeout(pushT);pushT=setTimeout(pushRemote,120)}
 }
+const st0=()=>S.settings;const alwaysOpen=st=>!st||st.alwaysOpen!==false;
 const maxRound=()=>S.settings.bonus?7:6;
 const tradable=r=>r<=6;
 const price=(k,r)=>PRICES[k][Math.min(r,7)];
@@ -555,11 +557,11 @@ function hBars(rows,{w=620,rowH=38,max,fmtv=v=>"$"+fmt(v),ref}){
 
 /* ---------- Clock (shared through phaseEndsAt) ---------- */
 let clockIv=null;
-function ensureClock(){if(S.phaseEndsAt&&S.phaseEndsAt>Date.now()&&!clockIv)clockIv=setInterval(tick,200)}
-function startClock(sec,phase){S.phaseDur=sec;S.phaseEndsAt=Date.now()+sec*1000;if(phase)S.phase=phase;save();render();ensureClock();tick()}
+function ensureClock(){if(S.phaseEndsAt&&S.phaseEndsAt>nowS()&&!clockIv)clockIv=setInterval(tick,200)}
+function startClock(sec,phase){S.phaseDur=sec;S.phaseEndsAt=nowS()+sec*1000;if(phase)S.phase=phase;save();render();ensureClock();tick()}
 function stopClock(){S.phaseEndsAt=0;clearInterval(clockIv);clockIv=null;save();tick()}
 function tick(){
-  const end=S.phaseEndsAt||0,durS=S.phaseDur||0,leftMs=Math.max(0,end-Date.now()),running=end>0&&leftMs>0,left=Math.ceil(leftMs/1000);
+  const end=S.phaseEndsAt||0,durS=S.phaseDur||0,leftMs=Math.max(0,end-nowS()),running=end>0&&leftMs>0,left=Math.ceil(leftMs/1000);
   const txt=Math.floor(left/60)+":"+String(left%60).padStart(2,"0"),low=running&&left<=(durS>=120?30:10),frac=running&&durS?leftMs/(durS*1000):0;
   document.querySelectorAll("[data-clock]").forEach(e=>e.textContent=txt);
   const ct=$("#clockT");if(ct){ct.textContent=txt;ct.classList.toggle("low",low)}
@@ -587,7 +589,7 @@ function renderStrip(){
   $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${l}</button>`).join("");
   TABS.forEach(([k])=>$("#desk-"+k).hidden=S.tab!==k)}
 function setPhase(p){S.phase=p;save();render()}
-function stateBox(){const flag=S.phase==="abierto"?["open","Mercado abierto"]:S.phase==="cerrado"?["closed","Mercado cerrado"]:S.phase==="analisis"?["idle","Analicen"]:["idle","Noticia"];
+function stateBox(){const flag=alwaysOpen(S.settings)&&tradable(S.round)?["open","Mercado abierto"]:S.phase==="abierto"?["open","Mercado abierto"]:S.phase==="cerrado"?["closed","Mercado cerrado"]:S.phase==="analisis"?["idle","Analicen"]:["idle","Noticia"];
   return `<div class="card statebox"><div class="bigring"><svg viewBox="0 0 150 150" aria-hidden="true"><circle class="bgc" cx="75" cy="75" r="65" fill="none" stroke-width="14"/><circle class="fgc" cx="75" cy="75" r="65" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="408.4" stroke-dashoffset="408.4"/></svg><div class="t" data-clock>0:00</div></div><span class="flag ${flag[0]}">${flag[1]}</span></div>`}
 
 /* ---------- Mercado ---------- */
@@ -690,10 +692,10 @@ function renderBroker(){
   let held="";
   if(T.team){const L=ledger(T.team,Math.min(r,6));held=ASSETS.filter(a=>L.h[a.k]).map(a=>`<span class="tag">${swatch(a.c)}${a.sym} ${L.h[a.k]}</span>`).join(" ")||'<span class="muted">Sin posiciones todavía.</span>'}
   const card=CARDS[r];const recent=S.trades.filter(t=>t.round===r).slice(-8).reverse();
-  const teamMode=MODE==="team",marketOpen=S.phase==="abierto"&&(!S.phaseEndsAt||S.phaseEndsAt>Date.now());
+  const teamMode=MODE==="team",marketOpen=(alwaysOpen(S.settings)&&tradable(S.round))||(S.phase==="abierto"&&(!S.phaseEndsAt||S.phaseEndsAt>nowS()));
   const form=`<form class="card ticket" id="ticketForm" autocomplete="off">
      <div><div class="lbl">Ticket · Ronda ${r}</div><h2 style="font-size:22px;margin-top:4px">${can?"Nueva orden":"Ronda sin negociación"}</h2></div>
-     ${teamMode?(can&&!marketOpen?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">${S.phase==="cerrado"?"El mercado de esta ronda ya cerró.":"El mercado aún no abre."} Pueden preparar la orden y enviarla cuando el facilitador abra el mercado.</div>`:""):(can&&(S.phase==="noticia"||S.phase==="analisis")?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">El mercado de esta ronda aún no abre. Puedes registrar tickets, pero los equipos todavía no deberían entregarlos.</div>`:"")}
+     ${teamMode?(can&&!marketOpen?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">${S.phase==="cerrado"?"El mercado de esta ronda ya cerró.":"El mercado aún no abre."} Pueden preparar la orden y enviarla cuando el facilitador abra el mercado.</div>`:""):(can&&!alwaysOpen(st0())&&(S.phase==="noticia"||S.phase==="analisis")?`<div class="verdict" style="color:var(--warn);background:var(--warn-soft)">El mercado de esta ronda aún no abre. Puedes registrar tickets, pero los equipos todavía no deberían entregarlos.</div>`:"")}
      ${can?"":`<div class="verdict no">La ronda de 5 años solo se revela. Vuelve a R6 para corregir órdenes.</div>`}
      <div class="seg" role="group" aria-label="Operación"><button type="button" class="buy" data-side="BUY" aria-pressed="${T.side==="BUY"}">▲ Comprar</button><button type="button" class="sell" data-side="SELL" aria-pressed="${T.side==="SELL"}">▼ Vender</button></div>
      <div><div class="lbl" style="margin-bottom:8px">Activo · precio de la ronda</div><div class="assetpick">${assetBtns}</div></div>
@@ -721,7 +723,9 @@ function renderBroker(){
    </div></div>`}
 let busy=false;
 async function executeTicket(status,why){
-  if(FB&&NET==="on"){
+  if(busy)return;
+  if(MODE==="team"&&!FB){toast("Sin conexión con el mercado. Esperen unos segundos: se reconecta solo.");return}
+  if(FB){
     const o={team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm,reason:T.reason.trim()};busy=true;render();
     try{const t=await executeRemote(o,status,why,MODE==="team"?"equipo":"broker");
       toast(status==="ejecutado"?`✓ ${tn(t.team)} ${t.side==="BUY"?"compra":"vende"} ${t.qty} ${an(t.asset)} a $${fmt(t.price)}`:`Rechazo registrado: ${why}`);
@@ -832,6 +836,7 @@ function renderAjustes(){const st=S.settings;
      <label class="f"><span class="lbl">Inflación al cierre sobre el efectivo (%)</span><input id="sInf" type="number" min="0" max="50" step="1" value="${st.inflation}"></label>
      <div class="two"><label class="f"><span class="lbl">Análisis (segundos)</span><input id="sAna" type="number" min="10" max="600" step="10" value="${anaSec()}"></label>
        <label class="f"><span class="lbl">Mercado abierto (minutos)</span><input id="sMkt" type="number" min="0.5" max="20" step="0.5" value="${mktSec()/60}"></label></div>
+     <label class="check"><input id="sOpen" type="checkbox" ${alwaysOpen(st)?"checked":""}> Mercado siempre abierto: los equipos pueden enviar órdenes en cualquier momento de las rondas 0 a 6</label>
      <label class="check"><input id="sRM" type="checkbox" ${st.requireRM?"checked":""}> Exigir firma del Risk Manager</label>
      <label class="check"><input id="sBonus" type="checkbox" ${st.bonus?"checked":""}> Incluir la ronda bonus de 5 años</label>
      <p class="muted" style="font-size:13px;margin:0">Los cambios de comisión y límite aplican a las órdenes nuevas.</p></div></div>
@@ -878,7 +883,7 @@ document.addEventListener("scroll",()=>tip.hidden=true,true);
 let joinErr="";
 function renderTeam(){
   const el=$("#desk-team");
-  if(NET!=="on"){el.innerHTML=`<div class="join card"><h2>Conectando con el mercado…</h2><p class="muted" style="margin:0">${NET==="err"?"No se pudo conectar. Revisa el enlace o la conexión a internet y recarga la página.":"Un momento."}</p></div>`;return}
+  if(!everOn&&!(NET==="on"&&S.teams.length)){el.innerHTML=`<div class="join card"><h2>${NET==="err"?"No se pudo entrar al mercado":"Conectando con el mercado…"}</h2><p class="muted" style="margin:0">${NET==="err"?esc(lastErr||"Revisa el enlace."):lastErr?"La red está lenta. Reintentando automáticamente…":"Un momento."}</p>${lastErr&&NET!=="err"?`<p class="muted" style="margin:0;font-size:13px">${esc(lastErr)}</p>`:""}</div>`;return}
   const me=S.teams.find(t=>t.id===T.team);
   if(!me){el.innerHTML=`<form class="join card" id="joinForm" autocomplete="off"><div><div class="lbl" style="color:var(--cyan)">Smart Market · ingreso del equipo</div><h2 style="font-size:28px;margin-top:6px">¿Qué equipo son?</h2></div>
      <label class="f"><span class="lbl">Equipo</span><select id="joinTeam"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${QS.get("equipo")===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label>
@@ -888,7 +893,7 @@ function renderTeam(){
   const r=S.round,R=ROUNDS[r],L=ledger(me.id,Math.min(r,6));
   const mine=S.trades.filter(t=>t.team===me.id).slice().reverse();
   el.innerHTML=`<div class="team-head"><div><div class="lbl" style="color:var(--cyan)">Pantalla del equipo</div><div class="team-name">${esc(me.name)}</div></div>
-     <div class="toolbar"><span class="netpill on"><i></i>En línea</span><button id="leaveTeam" class="ghost">Cambiar de equipo</button></div></div>
+     <div class="toolbar">${NET==="on"&&!STALE?'<span class="netpill on"><i></i>En línea</span>':'<span class="netpill err"><i></i>Reconectando…</span>'}<button id="leaveTeam" class="ghost">Cambiar de equipo</button></div></div>
    <div class="hero"><div class="hero-main"><div class="lbl">Ronda ${r}${r===7?" · bonus":""} de ${maxRound()}</div><h1>${R.t}</h1><div class="newsbox">${esc(R.news)}</div></div>${stateBox()}</div>
    <div class="tickers">${tickersHTML(r)}</div>
    <div class="desk-cols">${renderBroker()}<div class="grid">${walletCard(me.id,r)}
@@ -905,9 +910,9 @@ function parseCfg(txt){const m=String(txt).match(/\{[\s\S]*\}/);if(!m)throw new 
 function sharedOf(o){const x={};SHARED.forEach(k=>x[k]=o[k]===undefined?null:o[k]);return x}
 function fbInit(cfg){if(!window.firebase)throw new Error("Firebase no está disponible en esta versión. Usa la versión publicada en GitHub.");
   const name="smc";let app=(firebase.apps||[]).find(a=>a.name===name);const fresh=!app;if(!app)app=firebase.initializeApp(cfg,name);
-  const db=app.firestore();if(fresh){try{db.settings({experimentalAutoDetectLongPolling:true,merge:true})}catch(e){}}return db}
+  const db=app.firestore();if(fresh){try{db.settings({experimentalForceLongPolling:true,merge:true})}catch(e){}}return db}
 let lastErr="";
-function withTimeout(pr,ms){return Promise.race([pr,new Promise((_,rej)=>setTimeout(()=>rej(new Error("Firebase no respondió en "+Math.round(ms/1000)+" s. Revisa que la base Firestore exista, que las reglas estén publicadas y que la red del colegio no bloquee firestore.googleapis.com.")),ms))])}
+function withTimeout(pr,ms){return Promise.race([pr,new Promise((_,rej)=>setTimeout(()=>rej(Object.assign(new Error("Firebase no respondió en "+Math.round(ms/1000)+" s. Revisa que la base Firestore exista, que las reglas estén publicadas y que la red del colegio no bloquee firestore.googleapis.com."),{code:"timeout"})),ms))])}
 function fbMsg(e){const c=e&&e.code||"";if(c==="permission-denied")return "Firebase rechazó el acceso (permission-denied). Publica las reglas de Firestore que dicen match /games/{gameId}.";
   if(c==="not-found")return "No se encontró la base de datos Firestore del proyecto. Créala en Firebase → Firestore Database.";
   if(c==="unavailable")return "Firebase no está disponible desde esta red. Prueba con otra conexión (por ejemplo, datos del celular).";
@@ -917,18 +922,33 @@ function pin4(){return String(Math.floor(1000+Math.random()*9000))}
 function ensurePins(){let ch=false;S.teams.forEach(t=>{if(!t.pin){t.pin=pin4();ch=true}});return ch}
 function subscribe(){
   const g=FB.gameRef;FB.unsub.forEach(u=>u());FB.unsub=[];
-  FB.unsub.push(g.onSnapshot(sn=>{if(!sn.exists){NET="err";safeRender();return}const d=sn.data();
+  FB.unsub.push(g.onSnapshot({includeMetadataChanges:true},sn=>{if(!sn.exists){NET="err";lastErr="No existe un juego con ese código.";safeRender();return}const d=sn.data();
     if(!pushPending)SHARED.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)S[k]=d[k]});S.seq=Math.max(S.seq||0,d.seq||0);lastGameJSON=JSON.stringify(sharedOf(S));
-    NET="on";if(MODE!=="team")try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-    ensureClock();safeRender()},err=>{NET="err";safeRender()}));
+    const was=NET;NET="on";STALE=sn.metadata.fromCache;if(!STALE){everOn=true;retryN=0;lastErr=""}
+    if(MODE!=="team")try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+    if(was!=="on"&&pushPending)pushRemote();
+    ensureClock();safeRender()},onNetErr));
   FB.unsub.push(g.collection("trades").onSnapshot(sn=>{
     if(MODE!=="team"&&FB.seen)sn.docChanges().forEach(c=>{const t=c.doc.data();if(c.type==="added"&&t.src==="equipo")toast(`${tn(t.team)} ${t.side==="BUY"?"compró":"vendió"} ${t.qty} ${A(t.asset).sym} a $${fmt(t.price)}`)});
     FB.seen=true;S.trades=sn.docs.map(d=>d.data()).sort((a,b)=>a.id-b.id);lastTrades={};S.trades.forEach(t=>lastTrades[t.id]=JSON.stringify(t));
     if(MODE!=="team")try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-    safeRender()},err=>{NET="err";safeRender()}));
+    safeRender()},onNetErr));
 }
+function onNetErr(e){
+  if(e&&e.code==="permission-denied"){NET="err";lastErr=fbMsg(e);safeRender();return}
+  NET="connecting";STALE=true;lastErr=fbMsg(e);safeRender();scheduleRetry()}
+function scheduleRetry(now){
+  if(!LAST)return;clearTimeout(retryT);const wait=now?300:Math.min(15000,1500*Math.pow(2,retryN))+Math.random()*1000;retryN++;
+  retryT=setTimeout(()=>{if(NET==="on"&&!STALE)return;if(FB)subscribe();else goOnline(LAST.cfg,LAST.gameId,false)},wait)}
+async function clockSync(){
+  try{const ref=FB.gameRef.collection("clock").doc(Math.random().toString(36).slice(2,10));const t0=Date.now();
+    await withTimeout(ref.set({t:firebase.firestore.FieldValue.serverTimestamp()}),8000);const sn=await withTimeout(ref.get({source:"server"}),8000);const t1=Date.now();
+    const st=sn.data()&&sn.data().t;if(st&&st.toMillis){OFF=st.toMillis()-Math.round((t0+t1)/2);ensureClock();safeRender()}ref.delete().catch(()=>{})}catch(e){}}
+window.addEventListener("online",()=>{retryN=0;scheduleRetry(true)});
+window.__smc={get OFF(){return OFF},onNetErr};
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&LAST&&(NET!=="on"||STALE)){retryN=0;scheduleRetry(true)}});
 async function pushRemote(){
-  if(!FB||NET!=="on")return;pushPending=false;const g=FB.gameRef,b=FB.db.batch();let n=0;
+  if(!FB)return;if(NET!=="on"){pushPending=true;return}pushPending=false;const g=FB.gameRef,b=FB.db.batch();let n=0;
   const sh=sharedOf(S),js=JSON.stringify(sh);
   const now={};S.trades.forEach(t=>now[t.id]=JSON.stringify(t));let tradesChanged=false;
   Object.keys(now).forEach(id=>{if(lastTrades[id]!==now[id]){b.set(g.collection("trades").doc(String(id).padStart(6,"0")),JSON.parse(now[id]));n++;tradesChanged=true}});
@@ -937,30 +957,38 @@ async function pushRemote(){
     const mx=Math.max(0,...S.trades.map(t=>t.id));sh.seq=Math.max(S.seq||0,mx);}
   if(js!==lastGameJSON||tradesChanged){b.set(g,sh,{merge:true});n++}
   if(!n)return;lastGameJSON=js;lastTrades=now;
-  try{await b.commit()}catch(e){toast("No se pudo sincronizar: "+(e.message||"sin conexión"))}
+  try{await b.commit()}catch(e){lastGameJSON="";lastTrades={};pushPending=true;toast("No se pudo sincronizar, se reintentará: "+(e.message||"sin conexión"));scheduleRetry()}
 }
 async function executeRemote(o,status,why,source){
+  const cid=o.cid||(o.cid=Date.now().toString(36)+Math.random().toString(36).slice(2,8));let err;
+  for(let a=0;a<4;a++){
+    try{return await withTimeout(txOnce(o,status,why,source),20000)}
+    catch(e){err=e;if(!e||!e.code||e.code==="permission-denied"||e.code==="not-found")throw e;await new Promise(r=>setTimeout(r,600*(a+1)+Math.random()*700))}}
+  throw Object.assign(new Error("La red está lenta y la orden no se confirmó. Revisen “Nuestras órdenes” antes de enviarla de nuevo."),{code:err&&err.code})}
+function txOnce(o,status,why,source){
   const g=FB.gameRef;
   return FB.db.runTransaction(async tx=>{
+    const cRef=g.collection("cids").doc(o.cid);const cs=await tx.get(cRef);if(cs.exists)return cs.data().t;
     const gs=await tx.get(g);const G=gs.data();const tRef=g.collection("teams").doc(o.team);const ts=await tx.get(tRef);
     const L=ts.exists?ts.data():emptyL();const r=G.round;
     if(r>6)throw new Error("Esta ronda no se negocia.");
-    if(source==="equipo"&&(G.phase!=="abierto"||(G.phaseEndsAt&&Date.now()>G.phaseEndsAt+3000)))throw new Error("El mercado está cerrado.");
+    if(source==="equipo"&&!alwaysOpen(G.settings)&&(G.phase!=="abierto"||(G.phaseEndsAt&&nowS()>G.phaseEndsAt+3000)))throw new Error("El mercado está cerrado.");
     if(status==="ejecutado"){const v=validate(L,o,r,G.settings);if(!v.ok)throw new Error(v.why)}
     const id=(G.seq||0)+1,p=price(o.asset,r),fee=status==="ejecutado"?G.settings.fee:0;
     const t={id,team:o.team,round:r,side:o.side,asset:o.asset,qty:o.qty,price:p,fee,reason:o.reason||"",rm:!!o.rm,status,why:why||"",ts:Date.now(),src:source};
     if(status==="ejecutado"){applyTrade(L,t);tx.set(tRef,{cash:L.cash,h:L.h,cost:L.cost})}
-    tx.update(g,{seq:id});tx.set(g.collection("trades").doc(String(id).padStart(6,"0")),t);return t})}
+    tx.update(g,{seq:id});tx.set(g.collection("trades").doc(String(id).padStart(6,"0")),t);tx.set(cRef,{t});return t})}
 async function goOnline(cfg,gameId,create){
-  NET="connecting";lastErr="";render();
+  NET="connecting";if(!LAST||LAST.gameId!==gameId)lastErr="";LAST={cfg,gameId};clearTimeout(retryT);render();
   try{const db=fbInit(cfg);FB={db,cfg,gameId,gameRef:db.collection("games").doc(gameId),unsub:[]};
     if(create){ensurePins();const b=db.batch(),g=FB.gameRef;const sh=sharedOf(S);sh.seq=Math.max(S.seq||0,0,...S.trades.map(t=>t.id));sh.created=Date.now();b.set(g,sh);
       S.trades.forEach(t=>b.set(g.collection("trades").doc(String(t.id).padStart(6,"0")),t));S.teams.forEach(t=>b.set(g.collection("teams").doc(t.id),teamDoc(t.id)));await withTimeout(b.commit(),15000)}
     else{const sn=await withTimeout(FB.gameRef.get(),15000);if(!sn.exists)throw new Error("No existe un juego con ese código.")}
     if(MODE!=="team")try{localStorage.setItem(KEY_ONLINE,JSON.stringify({cfg,gameId}))}catch(e){}
-    subscribe();if(create)toast("Juego en línea creado: "+gameId)}
-  catch(e){NET="err";FB=null;lastErr=fbMsg(e);toast(lastErr);render()}}
-function goLocal(){if(FB)FB.unsub.forEach(u=>u());FB=null;NET="local";try{localStorage.removeItem(KEY_ONLINE)}catch(e){}save();render();toast("Volviste al modo local. La partida sigue en este navegador.")}
+    subscribe();clockSync();if(create)toast("Juego en línea creado: "+gameId)}
+  catch(e){FB=null;lastErr=fbMsg(e);const fatal=create||e.code==="permission-denied"||/No existe/.test(e.message||"");
+    if(fatal){NET="err";LAST=create?null:LAST;toast(lastErr);render()}else{NET="connecting";render();scheduleRetry()}}}
+function goLocal(){if(FB)FB.unsub.forEach(u=>u());FB=null;NET="local";LAST=null;clearTimeout(retryT);everOn=false;try{localStorage.removeItem(KEY_ONLINE)}catch(e){}save();render();toast("Volviste al modo local. La partida sigue en este navegador.")}
 function accessCard(){return `<div class="card" style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:22px;align-items:center">
   <div class="qrbox" id="qrBox" aria-label="Código QR para entrar"></div>
   <div style="flex:1 1 320px;min-width:0;display:grid;gap:10px"><div class="lbl" style="color:var(--cyan)">Acceso de los equipos</div>
@@ -968,7 +996,7 @@ function accessCard(){return `<div class="card" style="margin-bottom:18px;displa
 function drawQR(){const box=$("#qrBox");if(!box)return;box.innerHTML="";if(window.QRCode){new QRCode(box,{text:teamLink(),width:220,height:220,colorDark:"#0A1430",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.L})}else box.innerHTML='<span style="color:#0A1430;font-size:13px;line-height:1.3;display:block;width:220px;padding:10px">Código QR no disponible. Comparte el enlace de los equipos.</span>'}
 function onlineCard(){
   const has=!!window.firebase;let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY_ONLINE)||"null")}catch(e){}
-  if(FB&&NET==="on")return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2><span class="netpill on"><i></i>Conectado · ${esc(FB.gameId)}</span></div>
+  if(FB&&(NET==="on"||NET==="connecting"))return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2>${NET==="on"&&!STALE?`<span class="netpill on"><i></i>Conectado · ${esc(FB.gameId)}</span>`:`<span class="netpill err"><i></i>Reconectando · ${esc(FB.gameId)}</span>`}</div>
     <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start"><div class="qrbox" id="qrBox"></div>
     <div style="flex:1 1 360px;min-width:0;display:grid;gap:12px"><p style="margin:0">Cada equipo abre este enlace en su laptop o tablet, elige su equipo y escribe su PIN. Sus órdenes se ejecutan solas cuando el mercado está abierto y cumplen las reglas.</p>
       <div class="linkbox" id="teamLinkBox">${esc(teamLink())}</div><div class="toolbar"><button id="copyLink" class="primary">Copiar enlace</button><button id="newPins">Generar PIN nuevos</button><button id="goLocal" class="ghost">Desconectar y volver a modo local</button></div>
@@ -1043,6 +1071,7 @@ document.addEventListener("change",e=>{const el=e.target;
   else if(el.id==="sInf"){S.settings.inflation=Math.min(50,Math.max(0,Number(el.value)||0));save()}
   else if(el.id==="sAna"){S.settings.analysisSec=Math.min(600,Math.max(10,Math.round(Number(el.value)||60)));save();renderStrip()}
   else if(el.id==="sMkt"){S.settings.marketSec=Math.min(1200,Math.max(30,Math.round((Number(el.value)||5)*60)));save();renderStrip()}
+  else if(el.id==="sOpen"){S.settings.alwaysOpen=el.checked;save();render()}
   else if(el.id==="sRM"){S.settings.requireRM=el.checked;save()}
   else if(el.id==="sBonus"){S.settings.bonus=el.checked;if(!el.checked&&S.round>6)S.round=6;save();render()}
   else if(el.dataset.tname){render()}
@@ -1054,6 +1083,7 @@ else{render();ensureClock();try{const sv=JSON.parse(localStorage.getItem(KEY_ONL
 initDownloads();
 })();
 </script>
+
 
 </body>
 </html>
