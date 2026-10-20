@@ -701,11 +701,10 @@ function renderBroker(){
      <div><div class="lbl" style="margin-bottom:8px">Activo · precio de la ronda</div><div class="assetpick">${assetBtns}</div></div>
      <div class="two"><label class="f"><span class="lbl">Cantidad</span><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="${esc(T.qty)}" placeholder="Unidades enteras"></label>
        ${teamMode?`<div class="f"><span class="lbl">Equipo</span><div style="font-weight:800;font-size:17px;padding:10px 0">${esc(tn(T.team))}</div></div>`:`<label class="f"><span class="lbl">Equipo</span><select id="teamSel"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${T.team===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label>`}</div>
-     <label class="f"><span class="lbl">Razón (1 línea)</span><input id="reason" type="text" maxlength="120" value="${esc(T.reason)}" placeholder="Ej.: Kaiman confirma ventas +30%"></label>
      <label class="check"><input id="rm" type="checkbox" ${T.rm?"checked":""}> Firmado por el Risk Manager</label>
      ${T.team?`<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="lbl">${esc(tn(T.team))} tiene</span>${held}</div>`:""}
      ${prev}
-     ${showV?`<div class="verdict ${c.ok?"ok":"no"}">${c.ok?(teamMode?(marketOpen?"✓ Orden válida. Lista para enviar.":"✓ Orden válida. Espera a que abra el mercado."):"✓ Orden válida. Lista para ejecutar."):"✕ "+esc(c.why)}</div>`:""}
+     ${!showV&&lastOk&&lastOk.team===T.team?`<div class="verdict ok">${esc(lastOk.text)}</div>`:""}${showV?`<div class="verdict ${c.ok?"ok":"no"}">${c.ok?(teamMode?(marketOpen?"✓ Orden válida. Lista para enviar.":"✓ Orden válida. Espera a que abra el mercado."):"✓ Orden válida. Lista para ejecutar."):"✕ "+esc(c.why)}</div>`:""}
      <div class="toolbar">${teamMode?`<button type="submit" class="primary" ${c.ok&&can&&marketOpen&&!busy?"":"disabled"}>${busy?"Enviando…":"Enviar orden"}</button>`:`<button type="submit" class="primary" ${c.ok&&can&&!busy?"":"disabled"}>Ejecutar orden</button><button type="button" id="rejectBtn" ${showV&&!c.ok&&can?"":"disabled"}>Registrar rechazo</button>`}<button type="button" id="clearBtn" class="ghost">Limpiar</button></div>
    </form>`;
   if(teamMode)return form;
@@ -721,19 +720,22 @@ function renderBroker(){
        ${r<maxRound()?`<div style="display:flex;flex-wrap:wrap;gap:6px"><span class="lbl" style="align-self:center">Próxima ronda</span>${ASSETS.map(a=>{const ch=pct(price(a.k,r+1),price(a.k,r));return `<span class="tag">${swatch(a.c)}${a.sym} $${fmt(price(a.k,r+1))} <span class="${ch>=0?"up":"down"}">${arrow(ch)}</span></span>`}).join("")}</div>`:""}
      </div></details>
    </div></div>`}
-let busy=false;
+let busy=false,lastOk=null;
 async function executeTicket(status,why){
   if(busy)return;
   if(MODE==="team"&&!FB){toast("Sin conexión con el mercado. Esperen unos segundos: se reconecta solo.");return}
   if(FB){
     const o={team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm,reason:T.reason.trim()};busy=true;render();
     try{const t=await executeRemote(o,status,why,MODE==="team"?"equipo":"broker");
+      if(t&&!S.trades.some(x=>x.id===t.id)){S.trades.push(t);S.trades.sort((a,b)=>a.id-b.id)}
+      lastOk=status==="ejecutado"?{team:t.team,text:`✓ Orden ejecutada: ${t.side==="BUY"?"compraron":"vendieron"} ${t.qty} ${an(t.asset)} a $${fmt(t.price)}. Efectivo disponible ahora: $${fmt(ledger(t.team,Math.min(S.round,6)).cash)}.`}:null;
       toast(status==="ejecutado"?`✓ ${tn(t.team)} ${t.side==="BUY"?"compra":"vende"} ${t.qty} ${an(t.asset)} a $${fmt(t.price)}`:`Rechazo registrado: ${why}`);
       T={team:T.team,side:T.side,asset:null,qty:"",reason:"",rm:false}}
     catch(e){toast("No se ejecutó: "+(e&&e.message||"error de conexión"))}
     busy=false;render();return}
   const r=S.round,p=price(T.asset,r);S.seq++;
   S.trades.push({id:S.seq,team:T.team,round:r,side:T.side,asset:T.asset,qty:Number(T.qty),price:p,fee:status==="ejecutado"?S.settings.fee:0,reason:T.reason.trim(),rm:T.rm,status,why:why||"",ts:Date.now()});save();
+  lastOk=status==="ejecutado"?{team:T.team,text:`✓ Orden ejecutada: ${tn(T.team)} ${T.side==="BUY"?"compró":"vendió"} ${T.qty} ${an(T.asset)} a $${fmt(p)}. Efectivo disponible ahora: $${fmt(ledger(T.team,Math.min(r,6)).cash)}.`}:null;
   toast(status==="ejecutado"?`✓ ${tn(T.team)} ${T.side==="BUY"?"compra":"vende"} ${T.qty} ${an(T.asset)} a $${fmt(p)}`:`Rechazo registrado: ${why}`);
   T={team:T.team,side:T.side,asset:null,qty:"",reason:"",rm:false};render()}
 
@@ -804,7 +806,7 @@ function renderPuntaje(){
 /* ---------- Registro ---------- */
 let pendingVoid=null;
 function renderRegistro(){
-  const list=[...S.trades].reverse(),n=maxRound()>6?7:7;
+  const hasR=S.trades.some(t=>t.reason),list=[...S.trades].reverse(),n=maxRound()>6?7:7;
   // activity per round: buys vs sells (executed) + rejects
   const act=[];for(let i=0;i<7;i++){const tr=S.trades.filter(t=>t.round===i);act.push({b:tr.filter(t=>t.status==="ejecutado"&&t.side==="BUY").length,s:tr.filter(t=>t.status==="ejecutado"&&t.side==="SELL").length,x:tr.filter(t=>t.status!=="ejecutado").length})}
   const mx=Math.max(1,...act.map(a=>a.b+a.s+a.x));const w=560,h=170,L=30,B=24,T=10,ih=h-T-B,band=(w-L)/7,bw=26;
@@ -821,8 +823,8 @@ function renderRegistro(){
      <label class="f"><span class="lbl">Restaurar un respaldo (.json)</span><input id="restore" type="file" accept=".json,application/json"></label></div></div></div>
    <div class="card flat"><div class="card-h"><h2>Registro maestro</h2><p>${S.trades.length} tickets</p></div>
    ${pendingVoid?`<div class="confirm" style="margin-bottom:12px">¿Anular la orden #${pendingVoid}? Úsalo solo para corregir errores de digitación${FB&&NET==="on"?", idealmente con el mercado cerrado":""}. <button id="voidYes" class="danger">Anular</button><button id="voidNo" class="ghost">Cancelar</button></div>`:""}
-   ${list.length?`<div class="tablewrap"><table><thead><tr><th>#</th><th>R</th><th>Equipo</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Monto</th><th>RM</th><th>Razón</th><th>Estado</th><th></th></tr></thead><tbody>
-   ${list.map(t=>`<tr><td class="num">${t.id}</td><td class="num">${t.round}</td><td>${esc(tn(t.team))}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${t.price}</td><td class="r num">$${fmt(t.qty*t.price)}</td><td>${t.rm?"✓":"—"}</td><td style="min-width:180px">${esc(t.reason)||'<span class="muted">Sin razón</span>'}</td><td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn">Rechazada</span><div class="muted" style="font-size:12px">${esc(t.why)}</div>`}</td><td><button class="ghost" data-void="${t.id}" style="padding:4px 10px;font-size:12px">Anular</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">El registro está vacío. Cada ticket que ejecutes o rechaces en la Mesa del Broker queda aquí.</div>`}</div>`}
+   ${list.length?`<div class="tablewrap"><table><thead><tr><th>#</th><th>R</th><th>Equipo</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Monto</th><th>RM</th>${hasR?"<th>Razón</th>":""}<th>Estado</th><th></th></tr></thead><tbody>
+   ${list.map(t=>`<tr><td class="num">${t.id}</td><td class="num">${t.round}</td><td>${esc(tn(t.team))}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${t.price}</td><td class="r num">$${fmt(t.qty*t.price)}</td><td>${t.rm?"✓":"—"}</td>${hasR?`<td style="min-width:180px">${esc(t.reason)||'<span class="muted">—</span>'}</td>`:""}<td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn">Rechazada</span><div class="muted" style="font-size:12px">${esc(t.why)}</div>`}</td><td><button class="ghost" data-void="${t.id}" style="padding:4px 10px;font-size:12px">Anular</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">El registro está vacío. Cada ticket que ejecutes o rechaces en la Mesa del Broker queda aquí.</div>`}</div>`}
 
 /* ---------- Ajustes ---------- */
 let pendingReset=false;
@@ -899,7 +901,7 @@ function renderTeam(){
    <div class="tickers">${tickersHTML(r)}</div>
    <div class="desk-cols">${renderBroker()}<div class="grid">${walletCard(me.id,r)}
      <div class="card flat"><div class="card-h"><h2>Nuestras órdenes</h2><p>${mine.length} en total</p></div>
-     ${mine.length?`<div class="tablewrap"><table><thead><tr><th>R</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th>Razón</th></tr></thead><tbody>${mine.map(t=>`<tr><td class="num">${t.round}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${fmt(t.price)}</td><td>${esc(t.reason)||'<span class="muted">—</span>'}${t.status!=="ejecutado"?` <span class="pill warn">Rechazada</span>`:""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Todavía no envían órdenes. Cuando el mercado abra, la orden que envíen aparecerá aquí.</div>`}</div></div></div>`}
+     ${mine.length?`<div class="tablewrap"><table><thead><tr><th>R</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th>Estado</th></tr></thead><tbody>${mine.map(t=>`<tr><td class="num">${t.round}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${fmt(t.price)}</td><td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn">Rechazada</span>`}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Todavía no envían órdenes. Cuando el mercado abra, la orden que envíen aparecerá aquí.</div>`}</div></div></div>`}
 
 /* ---------- Online (Firebase) ---------- */
 const DEFAULT_CFG={apiKey:"AIzaSyAf0yRSsv5jAOnkcDwlTxNslY8ucB9azR4",authDomain:"ksmart-478e8.firebaseapp.com",projectId:"ksmart-478e8",appId:"1:334293663998:web:e4224025476bc4025aa5af"};
@@ -950,9 +952,15 @@ window.addEventListener("online",()=>{retryN=0;scheduleRetry(true)});
 window.__smc={get OFF(){return OFF},onNetErr};
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&LAST&&(NET!=="on"||STALE)){retryN=0;scheduleRetry(true)}});
 async function pushRemote(){
-  if(!FB)return;if(NET!=="on"){pushPending=true;return}pushPending=false;const g=FB.gameRef,b=FB.db.batch();let n=0;
+  if(!FB)return;if(NET!=="on"){pushPending=true;return}pushPending=false;const g=FB.gameRef;
   const sh=sharedOf(S),js=JSON.stringify(sh);
-  const now={};S.trades.forEach(t=>now[t.id]=JSON.stringify(t));let tradesChanged=false;
+  let now={};S.trades.forEach(t=>now[t.id]=JSON.stringify(t));
+  const changed=Object.keys(now).some(id=>lastTrades[id]!==now[id])||Object.keys(lastTrades).some(id=>!(id in now));
+  if(changed){ // traer órdenes que los equipos enviaron y que esta pantalla aún no recibió, para no pisar su billetera
+    try{const ss=await withTimeout(g.collection("trades").get(),10000);let add=false;
+      ss.docs.forEach(d=>{const t=d.data();if(t&&t.id!=null&&!(t.id in now)&&!(t.id in lastTrades)){S.trades.push(t);add=true}});
+      if(add){S.trades.sort((a,b)=>a.id-b.id);now={};S.trades.forEach(t=>now[t.id]=JSON.stringify(t))}}catch(e){}}
+  const b=FB.db.batch();let n=0,tradesChanged=false;
   Object.keys(now).forEach(id=>{if(lastTrades[id]!==now[id]){b.set(g.collection("trades").doc(String(id).padStart(6,"0")),JSON.parse(now[id]));n++;tradesChanged=true}});
   Object.keys(lastTrades).forEach(id=>{if(!(id in now)){b.delete(g.collection("trades").doc(String(id).padStart(6,"0")));n++;tradesChanged=true}});
   if(tradesChanged){S.teams.forEach(t=>{b.set(g.collection("teams").doc(t.id),teamDoc(t.id));n++});
@@ -1013,8 +1021,8 @@ function onlineCard(){
 
 /* ---------- Render + events ---------- */
 function safeRender(){const a=document.activeElement;if(a&&a.matches&&a.matches("input,select,textarea")&&a.closest(".desk")){pendingRender=true;return}render()}
-document.addEventListener("focusout",()=>{if(pendingRender){pendingRender=false;setTimeout(()=>{const a=document.activeElement;if(!(a&&a.matches&&a.matches("input,select,textarea")))render();else pendingRender=true},0)}});
-function render(){document.body.classList.toggle("teammode",MODE==="team");
+document.addEventListener("focusout",()=>{if(pendingRender)setTimeout(()=>{if(!pendingRender)return;const a=document.activeElement;if(!(a&&a.matches&&a.matches("input,select,textarea")))render()},350)});
+function render(){pendingRender=false;document.body.classList.toggle("teammode",MODE==="team");
   if(MODE==="team"){$("#logoSub").textContent="Pantalla del equipo";$("#roundBadge").textContent="R"+S.round;TABS.forEach(([k])=>$("#desk-"+k).hidden=true);$("#desk-team").hidden=false;renderTeam();tip.hidden=true;tick();return}
   $("#desk-team").hidden=true;renderStrip();({mercado:renderMercado,broker:renderBroker,equipos:renderEquipos,puntaje:renderPuntaje,registro:renderRegistro,ajustes:renderAjustes})[S.tab]();tip.hidden=true;tick()}
 function goRound(d){const n=S.round+d;if(n<0||n>maxRound())return;S.round=n;S.phase="noticia";stopClock();T.asset=null;T.qty="";save();render()}
@@ -1042,7 +1050,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
   if(b.dataset.focus){S.focusTeam=S.focusTeam===b.dataset.focus?null:b.dataset.focus;save();render();window.scrollTo({top:0,behavior:"smooth"});return}
   if(b.dataset.team){T.team=b.dataset.team;render();return}
   if(b.dataset.side){T.side=b.dataset.side;render();return}
-  if(b.dataset.asset){T.asset=b.dataset.asset;render();return}
+  if(b.dataset.asset){T.asset=b.dataset.asset;lastOk=null;render();return}
   if(b.id==="clearBtn"){T={team:T.team,side:"BUY",asset:null,qty:"",reason:"",rm:false};render();return}
   if(b.id==="rejectBtn"){const c=check({team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm});executeTicket("rechazado",c.why);return}
   if(b.dataset.void){pendingVoid=Number(b.dataset.void);render();return}
@@ -1059,7 +1067,7 @@ document.addEventListener("submit",e=>{e.preventDefault();
   if(e.target.id!=="ticketForm")return;if(busy)return;const c=check({team:T.team,side:T.side,asset:T.asset,qty:Number(T.qty),rm:T.rm});if(c.ok)executeTicket("ejecutado")});
 let reRender;
 document.addEventListener("input",e=>{const el=e.target;
-  if(el.id==="qty"){T.qty=el.value.trim();clearTimeout(reRender);reRender=setTimeout(()=>{render();const q=$("#qty");if(q){q.focus();const v=q.value;q.value="";q.value=v}},300)}
+  if(el.id==="qty"){T.qty=el.value.trim();clearTimeout(reRender);reRender=setTimeout(()=>{const a=document.activeElement;if(a&&a.id!=="qty"&&a.matches&&a.matches("input,select,textarea")){pendingRender=true;return}const wasQ=a&&a.id==="qty";render();const q=$("#qty");if(q&&wasQ){q.focus();const v=q.value;q.value="";q.value=v}},300)}
   else if(el.id==="reason")T.reason=el.value;
   else if(el.dataset.tname){const t=S.teams.find(x=>x.id===el.dataset.tname);if(el.value.trim())t.name=el.value;save()}});
 document.addEventListener("change",e=>{const el=e.target;
