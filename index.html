@@ -626,7 +626,7 @@ function renderMercado2(r,R,nCols,tickers,moves){
   $("#desk-mercado").innerHTML=`
    <div class="hero"><div class="hero-main"><div class="lbl">Ronda ${r}${r===7?" · bonus":""} de ${maxRound()}</div><h1>${R.t}</h1><div class="newsbox">${esc(R.news)}</div></div>
      ${stateBox()}</div>
-   ${FB&&NET==="on"&&S.showQR?accessCard():""}
+   ${savedGame()&&S.showQR?accessCard():""}
    <div class="tickers">${tickers}</div>
    <div class="cols-2">
      <div class="card"><div class="card-h"><h2>Así se movió esta ronda</h2><p>Variación de cada activo respecto a R${Math.max(0,r-1)}</p></div><div class="chartwrap">${moves}</div></div>
@@ -634,7 +634,7 @@ function renderMercado2(r,R,nCols,tickers,moves){
    </div>
    <div class="card" style="margin-top:18px"><div class="card-h"><h2>El mercado ronda a ronda</h2><div class="legend">${ASSETS.map(a=>`<span>${swatch(a.c)}${a.n}</span>`).join("")}</div></div><div class="chartwrap">${line}</div></div>
    ${rank}
-   <div class="toolbar" style="margin-top:16px"><button id="toggleRank" class="${S.hideRank?"pop":""}">${S.hideRank?"Mostrar carrera de patrimonio":"Ocultar carrera de patrimonio"}</button>${FB&&NET==="on"?`<button id="toggleQR">${S.showQR?"Ocultar acceso de equipos":"Mostrar acceso de equipos"}</button>`:""}<span class="muted" style="font-size:13px">El precio publicado ya incorpora la noticia. Todas las órdenes se ejecutan a este precio.</span></div>`;drawQR()}
+   <div class="toolbar" style="margin-top:16px"><button id="toggleRank" class="${S.hideRank?"pop":""}">${S.hideRank?"Mostrar carrera de patrimonio":"Ocultar carrera de patrimonio"}</button>${savedGame()?`<button id="toggleQR">${S.showQR?"Ocultar acceso de equipos":"Mostrar acceso de equipos"}</button>`:""}<span class="muted" style="font-size:13px">El precio publicado ya incorpora la noticia. Todas las órdenes se ejecutan a este precio.</span></div>`;drawQR()}
 
 /* ---------- Broker ---------- */
 let T={team:null,side:"BUY",asset:null,qty:"",reason:"",rm:false};
@@ -887,8 +887,10 @@ function renderTeam(){
   if(!everOn&&!(NET==="on"&&S.teams.length)){el.innerHTML=`<div class="join card"><h2>${NET==="err"?"No se pudo entrar al mercado":"Conectando con el mercado…"}</h2><p class="muted" style="margin:0">${NET==="err"?esc(lastErr||"Revisa el enlace."):lastErr?"La red está lenta. Reintentando automáticamente…":"Un momento."}</p>${lastErr&&NET!=="err"?`<p class="muted" style="margin:0;font-size:13px">${esc(lastErr)}</p>`:""}</div>`;return}
   const me=S.teams.find(t=>t.id===T.team);
   if(!me&&!autoJoined&&QS.get("equipo")&&S.teams.some(t=>t.id===QS.get("equipo"))){autoJoined=true;joinTeam(QS.get("equipo"));return}
-  if(!me){el.innerHTML=`<div class="join card" style="max-width:720px"><div><div class="lbl" style="color:var(--cyan)">Smart Market · ingreso del equipo</div><h2 style="font-size:28px;margin-top:6px">¿Qué equipo son?</h2><p class="muted" style="margin:6px 0 0">Toquen el nombre de su equipo.</p></div>
-     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px">${S.teams.map(t=>`<button type="button" class="primary" data-jointeam="${t.id}" style="min-height:72px;font-size:20px;font-weight:800">${esc(t.name)}</button>`).join("")}</div></div>`;return}
+  if(!me){el.innerHTML=`<div class="join card" style="max-width:720px"><div><div class="lbl" style="color:var(--cyan)">Smart Market · ingreso del equipo</div><h2 style="font-size:28px;margin-top:6px">¿Qué equipo son?</h2><p class="muted" style="margin:6px 0 0">Elijan su equipo en la lista y presionen Entrar.</p></div>
+     <label class="f"><span class="lbl">Equipo</span><select id="joinTeam" style="min-height:52px;font-size:18px"><option value="">Elegir equipo…</option>${S.teams.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select></label>
+     ${joinErr?`<div class="verdict no">${esc(joinErr)}</div>`:""}
+     <button type="button" id="joinGo" class="primary" style="min-height:56px;font-size:18px">Entrar</button></div>`;return}
   const r=S.round,R=ROUNDS[r],L=ledger(me.id,Math.min(r,6));
   const mine=S.trades.filter(t=>t.team===me.id).slice().reverse();
   el.innerHTML=`<div class="team-head"><div><div class="lbl" style="color:var(--cyan)">Pantalla del equipo</div><div class="team-name">${esc(me.name)}</div></div>
@@ -916,7 +918,8 @@ function fbMsg(e){const c=e&&e.code||"";if(c==="permission-denied")return "Fireb
   if(c==="not-found")return "No se encontró la base de datos Firestore del proyecto. Créala en Firebase → Firestore Database.";
   if(c==="unavailable")return "Firebase no está disponible desde esta red. Prueba con otra conexión (por ejemplo, datos del celular).";
   return (e&&e.message)||"No se pudo conectar."}
-function teamLink(id){if(!FB)return "";return location.origin+location.pathname+"?juego="+FB.gameId+"&cfg="+enc(FB.cfg)+(id?"&equipo="+id:"")}
+function savedGame(){if(FB)return {cfg:FB.cfg,gameId:FB.gameId};if(LAST)return LAST;try{return JSON.parse(localStorage.getItem(KEY_ONLINE)||"null")}catch(e){return null}}
+function teamLink(id){const g=savedGame();if(!g)return "";return location.origin+location.pathname+"?juego="+g.gameId+"&cfg="+enc(g.cfg)+(id?"&equipo="+id:"")}
 function pin4(){return String(Math.floor(1000+Math.random()*9000))}
 function ensurePins(){let ch=false;S.teams.forEach(t=>{if(!t.pin){t.pin=pin4();ch=true}});return ch}
 function subscribe(){
@@ -991,19 +994,20 @@ function goLocal(){if(FB)FB.unsub.forEach(u=>u());FB=null;NET="local";LAST=null;
 function accessCard(){return `<div class="card" style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:22px;align-items:center">
   <div class="qrbox" id="qrBox" aria-label="Código QR para entrar"></div>
   <div style="flex:1 1 320px;min-width:0;display:grid;gap:10px"><div class="lbl" style="color:var(--cyan)">Acceso de los equipos</div>
-    <div class="codebig">${esc(FB.gameId)}</div><p style="margin:0;font-size:18px">Escaneen el código con la laptop o tablet del equipo, y toquen el nombre de su equipo.</p></div></div>`}
+    <div class="codebig">${esc(savedGame().gameId)}</div><p style="margin:0;font-size:18px">Escaneen el código o abran este enlace y elijan su equipo en la lista.</p><div class="linkbox" id="teamLinkBox">${esc(teamLink())}</div><div class="toolbar"><button id="copyLink" class="primary">Copiar enlace</button></div></div></div>`}
 function drawQR(){const box=$("#qrBox");if(!box)return;box.innerHTML="";if(window.QRCode){new QRCode(box,{text:teamLink(),width:220,height:220,colorDark:"#0A1430",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.L})}else box.innerHTML='<span style="color:#0A1430;font-size:13px;line-height:1.3;display:block;width:220px;padding:10px">Código QR no disponible. Comparte el enlace de los equipos.</span>'}
 function onlineCard(){
   const has=!!window.firebase;let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY_ONLINE)||"null")}catch(e){}
   if(FB&&(NET==="on"||NET==="connecting"))return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2>${NET==="on"&&!STALE?`<span class="netpill on"><i></i>Conectado · ${esc(FB.gameId)}</span>`:`<span class="netpill err"><i></i>Reconectando · ${esc(FB.gameId)}</span>`}</div>
     <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start"><div class="qrbox" id="qrBox"></div>
-    <div style="flex:1 1 360px;min-width:0;display:grid;gap:12px"><p style="margin:0">Cada equipo abre este enlace en su laptop o tablet, y toca el nombre de su equipo. Sus órdenes se ejecutan solas cuando el mercado está abierto y cumplen las reglas.</p>
+    <div style="flex:1 1 360px;min-width:0;display:grid;gap:12px"><p style="margin:0">Cada equipo abre este enlace en su laptop o tablet, y elige su equipo en la lista. Sus órdenes se ejecutan solas cuando el mercado está abierto y cumplen las reglas.</p>
       <div class="linkbox" id="teamLinkBox">${esc(teamLink())}</div><div class="toolbar"><button id="copyLink" class="primary">Copiar enlace</button><button id="goLocal" class="ghost">Desconectar y volver a modo local</button></div>
-      <div class="tablewrap"><table><thead><tr><th>Equipo</th><th>Enlace directo (entra sin elegir)</th></tr></thead><tbody>${S.teams.map(t=>`<tr><td><b>${esc(t.name)}</b></td><td><button class="ghost" data-copyteam="${t.id}" style="padding:4px 10px;font-size:12px;min-height:0">Copiar enlace del equipo</button></td></tr>`).join("")}</tbody></table></div></div></div></div>`;
+</div></div></div>`;
   return `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Juego en línea</h2><span class="netpill ${NET==="err"?"err":""}"><i></i>${NET==="connecting"?"Conectando…":NET==="err"?"Sin conexión":"Modo local"}</span></div>
     ${has?`<div style="display:grid;gap:12px;max-width:760px"><p style="margin:0">Pega la configuración web de tu proyecto de Firebase (Configuración del proyecto → Tus apps → SDK de Firebase). Se guarda solo en este navegador y viaja en el enlace de los equipos.</p>
       <label class="f"><span class="lbl">Configuración de Firebase</span><textarea id="fbCfg" placeholder="const firebaseConfig = { apiKey: &quot;…&quot;, authDomain: &quot;…&quot;, projectId: &quot;…&quot;, appId: &quot;…&quot; };">${esc(JSON.stringify(saved?saved.cfg:DEFAULT_CFG,null,1))}</textarea></label>
       <div class="toolbar"><button id="createOnline" class="primary">Crear juego en línea con esta partida</button>${saved?`<button id="reconnect">Reconectar a ${esc(saved.gameId)}</button>`:""}</div>
+      ${saved?`<div class="lbl" style="margin-top:6px">Enlace general de los equipos · ${esc(saved.gameId)}</div><div class="linkbox" id="teamLinkBox">${esc(teamLink())}</div><div class="toolbar"><button id="copyLink">Copiar enlace</button></div>`:""}
       ${NET==="err"&&lastErr?`<div class="verdict no">${esc(lastErr)}</div>`:""}<p class="muted" style="margin:0;font-size:13px">Al crear el juego se suben los equipos, las reglas y las órdenes actuales.</p></div>`
     :`<p class="muted" style="margin:0">El juego en línea funciona en la versión publicada en GitHub Pages. Esta vista trabaja en modo local.</p>`}</div>`}
 
@@ -1032,7 +1036,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
   if(b.id==="createOnline"){try{const cfg=parseCfg($("#fbCfg").value);const id="KS-"+Math.random().toString(36).slice(2,8).toUpperCase();goOnline(cfg,id,true)}catch(e){toast(e.message)}return}
   if(b.id==="reconnect"){try{const sv=JSON.parse(localStorage.getItem(KEY_ONLINE));goOnline(sv.cfg,sv.gameId,false)}catch(e){toast("No hay un juego guardado.")}return}
   if(b.id==="goLocal"){goLocal();return}
-  if(b.dataset.jointeam){joinTeam(b.dataset.jointeam);return}
+  if(b.id==="joinGo"){const id=$("#joinTeam").value;if(!id){joinErr="Elijan su equipo en la lista.";render();return}joinErr="";joinTeam(id);return}
   if(b.id==="copyLink"||b.dataset.copyteam){const txt=teamLink(b.dataset.copyteam||"");navigator.clipboard.writeText(txt).then(()=>toast("Enlace copiado.")).catch(()=>{const lb=$("#teamLinkBox");if(lb){lb.textContent=txt;const rg=document.createRange();rg.selectNodeContents(lb);const sl=getSelection();sl.removeAllRanges();sl.addRange(rg)}toast("Copia el enlace seleccionado.")});return}
   if(b.id==="leaveTeam"){T.team=null;try{localStorage.removeItem(KEY_TEAM)}catch(e){}render();return}
   if(b.dataset.focus){S.focusTeam=S.focusTeam===b.dataset.focus?null:b.dataset.focus;save();render();window.scrollTo({top:0,behavior:"smooth"});return}
