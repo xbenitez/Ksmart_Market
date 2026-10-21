@@ -406,13 +406,15 @@ const GUIDE={
  cerrado:{todo:"Mercado cerrado: no se aceptan tickets nuevos. Registra en la Mesa del Broker los tickets del buzón y luego pasa a la siguiente ronda.",btn:"Siguiente ronda",cls:"primary"}};
 const anaSec=()=>S.settings.analysisSec||60, mktSec=()=>S.settings.marketSec||300;
 const dur=sec=>sec%60===0?(sec/60)+" min":sec>=60?Math.floor(sec/60)+" min "+(sec%60)+" s":sec+" s";
-const CAPITAL=10000, KEY="smc-broker-v1", VERSION="2026.10.20.4";
+const CAPITAL=10000, KEY="smc-broker-v1", VERSION="2026.10.21.3";
 const newer=(a,b)=>String(a||"").localeCompare(String(b||""),undefined,{numeric:true})>0;
 
 /* ---------- State ---------- */
-function freshState(n){return {round:0,phase:"noticia",teams:Array.from({length:n||6},(_,i)=>({id:"t"+(i+1),name:"Equipo "+(i+1)})),trades:[],seq:0,phaseEndsAt:0,phaseDur:0,settings:{fee:10,cap:50,inflation:5,bonus:true,requireRM:true,alwaysOpen:true,analysisSec:60,marketSec:300},decision:{},hideRank:true,tab:"broker",focusTeam:null,showQR:false}}
+const letter=i=>String.fromCharCode(65+i);
+function freshState(n){return {round:0,phase:"noticia",teams:Array.from({length:n||6},(_,i)=>({id:"t"+(i+1),name:"Equipo "+letter(i)})),trades:[],seq:0,phaseEndsAt:0,phaseDur:0,settings:{fee:10,cap:50,inflation:5,bonus:true,requireRM:false,alwaysOpen:true,analysisSec:60,marketSec:300},decision:{},hideRank:true,tab:"broker",focusTeam:null,showQR:false}}
 let S;try{S=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){S=null}
 if(!S||!S.teams)S=freshState(6);
+S.teams.forEach((t,i)=>{if(/^Equipo \d+$/.test(t.name))t.name="Equipo "+letter(i)}); // nombres por defecto con número pasan a letra
 const QS=new URLSearchParams(location.search);
 const MODE=QS.get("juego")?"team":"facilitator";
 const KEY_ONLINE="smc-online-v1",KEY_TEAM="smc-team-v1";
@@ -420,7 +422,7 @@ const SHARED=["round","phase","phaseEndsAt","phaseDur","settings","teams","decis
 let FB=null;           // {db,gameRef,gameId,cfg,unsub:[]}
 let NET="local";       // local | connecting | on | err
 let lastGameJSON="",lastTrades={},pushT=null,pendingRender=false,pushPending=false;
-let remoteVer="",PRES={};
+let remoteVer="",PRES={},pushing=false;
 let OFF=0,everOn=false,STALE=false,retryT=null,retryN=0,LAST=null;const nowS=()=>Date.now()+OFF;
 if(MODE==="team"){S=freshState(0);S.tab="team"}
 function save(){
@@ -458,7 +460,6 @@ function check(o){
   if(!o.team)return {ok:false,why:"Elige el equipo."};
   if(!o.asset)return {ok:false,why:"Elige el activo."};
   if(!Number.isInteger(o.qty)||o.qty<=0)return {ok:false,why:"La cantidad debe ser un número entero mayor que cero."};
-  if(S.settings.requireRM&&!o.rm)return {ok:false,why:"Falta la firma del Risk Manager."};
   return validate(ledger(o.team,r),o,r,S.settings)}
 function validate(L,o,r,st){
   const p=price(o.asset,r),fee=st.fee,gross=o.qty*p;
@@ -721,7 +722,6 @@ function renderBroker(){
      <div><div class="lbl" style="margin-bottom:8px">Activo · precio de la ronda</div><div class="assetpick">${assetBtns}</div></div>
      <div class="two"><label class="f"><span class="lbl">Cantidad</span><input id="qty" type="number" inputmode="numeric" min="1" step="1" value="${esc(T.qty)}" placeholder="Unidades enteras"></label>
        ${teamMode?`<div class="f"><span class="lbl">Equipo</span><div style="font-weight:800;font-size:17px;padding:10px 0">${esc(tn(T.team))}</div></div>`:`<label class="f"><span class="lbl">Equipo</span><select id="teamSel"><option value="">Elegir…</option>${S.teams.map(t=>`<option value="${t.id}" ${T.team===t.id?"selected":""}>${esc(t.name)}</option>`).join("")}</select></label>`}</div>
-     <label class="check"><input id="rm" type="checkbox" ${T.rm?"checked":""}> Firmado por el Risk Manager</label>
      ${T.team?`<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="lbl">${esc(tn(T.team))} tiene</span>${held}</div>`:""}
      ${prev}
      ${!showV&&lastOk&&lastOk.team===T.team?`<div class="verdict ok">${esc(lastOk.text)}</div>`:""}${showV?`<div class="verdict ${c.ok?"ok":"no"}">${c.ok?(teamMode?(marketOpen?"✓ Orden válida. Lista para enviar.":"✓ Orden válida. Espera a que abra el mercado."):"✓ Orden válida. Lista para ejecutar."):"✕ "+esc(c.why)}</div>`:""}
@@ -844,14 +844,14 @@ function renderRegistro(){
      <label class="f"><span class="lbl">Restaurar un respaldo (.json)</span><input id="restore" type="file" accept=".json,application/json"></label></div></div></div>
    <div class="card flat"><div class="card-h"><h2>Registro maestro</h2><p>${S.trades.length} tickets</p></div>
    ${pendingVoid?`<div class="confirm" style="margin-bottom:12px">¿Anular la orden #${num(pendingVoid)}? Úsalo solo para corregir errores de digitación${FB&&NET==="on"?", idealmente con el mercado cerrado":""}. <button id="voidYes" class="danger">Anular</button><button id="voidNo" class="ghost">Cancelar</button></div>`:""}
-   ${list.length?`<div class="tablewrap"><table><thead><tr><th>#</th><th>R</th><th>Equipo</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Monto</th><th>RM</th>${hasR?"<th>Razón</th>":""}<th>Estado</th><th></th></tr></thead><tbody>
-   ${list.map(t=>`<tr><td class="num">${num(t.id)}</td><td class="num">${t.round}</td><td>${esc(tn(t.team))}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${t.price}</td><td class="r num">$${fmt(t.qty*t.price)}</td><td>${t.rm?"✓":"—"}</td>${hasR?`<td style="min-width:180px">${esc(t.reason)||'<span class="muted">—</span>'}</td>`:""}<td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn">Rechazada</span><div class="muted" style="font-size:12px">${esc(t.why)}</div>`}</td><td><button class="ghost" data-void="${t.id}" style="padding:4px 10px;font-size:12px">Anular</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">El registro está vacío. Cada ticket que ejecutes o rechaces en la Mesa del Broker queda aquí.</div>`}</div>`}
+   ${list.length?`<div class="tablewrap"><table><thead><tr><th>#</th><th>R</th><th>Equipo</th><th>Op.</th><th>Activo</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Monto</th>${hasR?"<th>Razón</th>":""}<th>Estado</th><th></th></tr></thead><tbody>
+   ${list.map(t=>`<tr><td class="num">${num(t.id)}</td><td class="num">${t.round}</td><td>${esc(tn(t.team))}</td><td><span class="pill ${t.side==="BUY"?"ok":"no"}">${t.side==="BUY"?"Compra":"Venta"}</span></td><td><span class="tag">${swatch(A(t.asset).c)}${A(t.asset).sym}</span></td><td class="r num">${t.qty}</td><td class="r num">$${t.price}</td><td class="r num">$${fmt(t.qty*t.price)}</td>${hasR?`<td style="min-width:180px">${esc(t.reason)||'<span class="muted">—</span>'}</td>`:""}<td>${t.status==="ejecutado"?'<span class="pill info">Ejecutada</span>':`<span class="pill warn">Rechazada</span><div class="muted" style="font-size:12px">${esc(t.why)}</div>`}</td><td><button class="ghost" data-void="${t.id}" style="padding:4px 10px;font-size:12px">Anular</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">El registro está vacío. Cada ticket que ejecutes o rechaces en la Mesa del Broker queda aquí.</div>`}</div>`}
 
 /* ---------- Ajustes ---------- */
 let pendingReset=false;
 function renderAjustes(){const st=S.settings;
   $("#desk-ajustes").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))">${onlineCard()}
-   <div class="card"><div class="card-h"><h2>Equipos</h2><p>${S.teams.length} de 10</p></div><div class="grid" style="gap:10px">${S.teams.map((t,i)=>`<label class="f"><span class="lbl">Equipo ${i+1}</span><input id="tname-${t.id}" data-tname="${t.id}" value="${esc(t.name)}"></label>`).join("")}</div>
+   <div class="card"><div class="card-h"><h2>Equipos</h2><p>${S.teams.length} de 10</p></div><div class="grid" style="gap:10px">${S.teams.map((t,i)=>`<label class="f"><span class="lbl">Equipo ${letter(i)}</span><input id="tname-${t.id}" data-tname="${t.id}" value="${esc(t.name)}"></label>`).join("")}</div>
      <div class="toolbar" style="margin-top:14px"><button id="addTeam" ${S.teams.length>=10?"disabled":""}>+ Agregar equipo</button><button id="delTeam" class="ghost" ${S.teams.length<=2||S.trades.some(x=>x.team===S.teams[S.teams.length-1].id)?"disabled":""}>Quitar el último</button></div></div>
    <div class="card"><div class="card-h"><h2>Reglas del mercado</h2></div><div class="grid" style="gap:14px">
      <label class="f"><span class="lbl">Comisión por orden ejecutada ($)</span><input id="sFee" type="number" min="0" step="1" value="${st.fee}"></label>
@@ -860,7 +860,6 @@ function renderAjustes(){const st=S.settings;
      <div class="two"><label class="f"><span class="lbl">Análisis (segundos)</span><input id="sAna" type="number" min="10" max="600" step="10" value="${anaSec()}"></label>
        <label class="f"><span class="lbl">Mercado abierto (minutos)</span><input id="sMkt" type="number" min="0.5" max="20" step="0.5" value="${mktSec()/60}"></label></div>
      <label class="check"><input id="sOpen" type="checkbox" ${alwaysOpen(st)?"checked":""}> Mercado siempre abierto: los equipos pueden enviar órdenes en cualquier momento de las rondas 0 a 6</label>
-     <label class="check"><input id="sRM" type="checkbox" ${st.requireRM?"checked":""}> Exigir firma del Risk Manager</label>
      <label class="check"><input id="sBonus" type="checkbox" ${st.bonus?"checked":""}> Incluir la ronda bonus de 5 años</label>
      <p class="muted" style="font-size:13px;margin:0">Los cambios de comisión y límite aplican a las órdenes nuevas.</p></div></div>
    <div class="card"><div class="card-h"><h2>Partida</h2></div><div class="grid" style="gap:12px">
@@ -891,8 +890,8 @@ let DL=null;
 async function initDownloads(){try{if(window.claude&&window.claude.use)DL=await window.claude.use("downloads")}catch(e){DL=null}document.querySelectorAll("[data-dl]").forEach(b=>b.hidden=false)}
 async function saveFile(name,data){if(!DL){try{const url=URL.createObjectURL(new Blob([data],{type:name.endsWith(".csv")?"text/csv;charset=utf-8":"application/json"}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast("Archivo descargado.")}catch(e){toast("No se pudo descargar el archivo.")}return}
   try{await DL.save({filename:name,data});toast("Archivo guardado.")}catch(e){const c=e&&e.code;if(c==="declined")return;if(c==="rate_limited"){toast("Ya hay una descarga pendiente de confirmar.");return}toast("No se pudo guardar el archivo.");if(c==="unavailable"||c==="not_granted"){DL=null;document.querySelectorAll("[data-dl]").forEach(b=>b.hidden=true)}}}
-function csv(){const head=["id","ronda","equipo","operacion","activo","cantidad","precio","monto","comision","firma_RM","razon","estado","motivo_rechazo"];const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
-  return head.join(",")+"\n"+S.trades.map(t=>[t.id,t.round,tn(t.team),t.side,an(t.asset),t.qty,t.price,t.qty*t.price,t.fee,t.rm?"si":"no",t.reason,t.status,t.why].map(q).join(",")).join("\n")}
+function csv(){const head=["id","ronda","equipo","operacion","activo","cantidad","precio","monto","comision","razon","estado","motivo_rechazo"];const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  return head.join(",")+"\n"+S.trades.map(t=>[num(t.id),t.round,tn(t.team),t.side,an(t.asset),t.qty,t.price,t.qty*t.price,t.fee,t.reason,t.status,t.why].map(q).join(",")).join("\n")}
 
 /* ---------- Tooltip ---------- */
 const tip=$("#tip");
@@ -951,7 +950,7 @@ function ensurePins(){let ch=false;S.teams.forEach(t=>{if(!t.pin){t.pin=pin4();c
 function subscribe(){
   const g=FB.gameRef;FB.unsub.forEach(u=>u());FB.unsub=[];
   FB.unsub.push(g.onSnapshot({includeMetadataChanges:true},sn=>{if(!sn.exists){NET="err";lastErr="No existe un juego con ese código.";safeRender();return}const d=sn.data();
-    if(!pushPending)SHARED.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)S[k]=d[k]});S.seq=Math.max(S.seq||0,d.seq||0);lastGameJSON=JSON.stringify(sharedOf(S));
+    if(!pushPending&&!pushing)SHARED.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)S[k]=d[k]});S.seq=Math.max(S.seq||0,d.seq||0);lastGameJSON=JSON.stringify(sharedOf(S));
     remoteVer=d.ver||"";if(MODE!=="team"&&!sn.metadata.fromCache&&d.ver!==VERSION&&!newer(d.ver,VERSION))g.set({ver:VERSION},{merge:true}).catch(()=>{});
     const was=NET;NET="on";STALE=sn.metadata.fromCache;if(!STALE){if(!everOn&&MODE==="team")setTimeout(heartbeat,500);everOn=true;retryN=0;lastErr=""}
     if(MODE!=="team")try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
@@ -959,9 +958,13 @@ function subscribe(){
     ensureClock();safeRender()},onNetErr));
   FB.unsub.push(g.collection("trades").onSnapshot(sn=>{
     if(MODE!=="team"&&FB.seen)sn.docChanges().forEach(c=>{const t=c.doc.data();if(c.type==="added"&&t.src==="equipo")toast(`${tn(t.team)} ${t.side==="BUY"?"compró":"vendió"} ${t.qty} ${A(t.asset).sym} a $${fmt(t.price)}`)});
-    FB.seen=true;S.trades=sn.docs.map(d=>d.data()).sort((a,b)=>a.id-b.id);lastTrades={};S.trades.forEach(t=>lastTrades[t.id]=JSON.stringify(t));
+    const mine=MODE!=="team"||!FB.seen||!T.team||sn.docChanges().some(c=>{const t=c.doc.data();return !t||t.team===T.team});
+    FB.seen=true;
+    if(MODE!=="team"&&(pushPending||pushing)){const local=new Set(S.trades.map(t=>String(t.id)));let add=false;
+      sn.docs.forEach(d=>{const t=d.data();const k=String(t.id);if(!(k in lastTrades)&&!local.has(k)){S.trades.push(t);add=true}});if(add)S.trades.sort((a,b)=>a.id-b.id)}
+    else{S.trades=sn.docs.map(d=>d.data()).sort((a,b)=>a.id-b.id);lastTrades={};S.trades.forEach(t=>lastTrades[t.id]=JSON.stringify(t))}
     if(MODE!=="team")try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-    safeRender()},onNetErr));
+    if(mine)safeRender()},onNetErr)); // en una tablet, las órdenes de otros equipos no cambian nada visible: no se redibuja
   if(MODE!=="team")FB.unsub.push(g.collection("presence").onSnapshot(sn=>{PRES={};sn.docs.forEach(d=>{const x=d.data();PRES[d.id]={at:x.at&&x.at.toMillis?x.at.toMillis():0,ver:x.ver||""}});paintPresence()},()=>{}));
 }
 function heartbeat(){if(MODE!=="team"||!FB||!T.team||NET!=="on")return;FB.gameRef.collection("presence").doc(T.team).set({at:firebase.firestore.FieldValue.serverTimestamp(),ver:VERSION},{merge:true}).catch(()=>{})}
@@ -989,7 +992,8 @@ setInterval(heartbeat,25000);setInterval(paintPresence,10000);
 window.__smc={get OFF(){return OFF},onNetErr};
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&LAST&&(NET!=="on"||STALE)){retryN=0;scheduleRetry(true)}});
 async function pushRemote(){
-  if(!FB)return;if(NET!=="on"){pushPending=true;return}pushPending=false;const g=FB.gameRef;
+  if(!FB)return;if(NET!=="on"){pushPending=true;return}if(pushing){pushPending=true;clearTimeout(pushT);pushT=setTimeout(pushRemote,200);return}pushPending=false;pushing=true;try{await pushRemoteInner()}finally{pushing=false}}
+async function pushRemoteInner(){const g=FB.gameRef;
   const sh=sharedOf(S),js=JSON.stringify(sh);
   let now={};S.trades.forEach(t=>now[t.id]=JSON.stringify(t));
   const changed=Object.keys(now).some(id=>lastTrades[id]!==now[id])||Object.keys(lastTrades).some(id=>!(id in now));
@@ -1096,7 +1100,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
   if(b.id==="voidNo"){pendingVoid=null;render();return}
   if(b.id==="csvBtn"){saveFile("smart-market-registro.csv",csv());return}
   if(b.id==="jsonBtn"){saveFile("smart-market-respaldo.json",JSON.stringify(S,null,1));return}
-  if(b.id==="addTeam"){const n=S.teams.length+1;let id="t"+n;while(S.teams.some(t=>t.id===id))id+="x";S.teams.push({id,name:"Equipo "+n,pin:pin4()});save();render();return}
+  if(b.id==="addTeam"){const n=S.teams.length+1;let id="t"+n;while(S.teams.some(t=>t.id===id))id+="x";S.teams.push({id,name:"Equipo "+letter(n-1),pin:pin4()});save();render();return}
   if(b.id==="delTeam"){S.teams.pop();save();render();return}
   if(b.id==="demoBtn"){loadDemo();return}
   if(b.id==="resetBtn"){pendingReset=true;render();return} if(b.id==="resetNo"){pendingReset=false;render();return}
@@ -1118,7 +1122,6 @@ document.addEventListener("change",e=>{const el=e.target;
   else if(el.id==="sAna"){S.settings.analysisSec=Math.min(600,Math.max(10,Math.round(Number(el.value)||60)));save();renderStrip()}
   else if(el.id==="sMkt"){S.settings.marketSec=Math.min(1200,Math.max(30,Math.round((Number(el.value)||5)*60)));save();renderStrip()}
   else if(el.id==="sOpen"){S.settings.alwaysOpen=el.checked;save();render()}
-  else if(el.id==="sRM"){S.settings.requireRM=el.checked;save()}
   else if(el.id==="sBonus"){S.settings.bonus=el.checked;if(!el.checked&&S.round>6)S.round=6;save();render()}
   else if(el.dataset.tname){render()}
   else if(el.id==="restore"&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d.teams||!d.trades)throw 0;S=d;save();render();toast("Respaldo restaurado.")}catch(_){toast("Ese archivo no es un respaldo de Smart Market.")}};fr.readAsText(el.files[0])}});
