@@ -383,7 +383,7 @@ const ASSETS=[
  {k:"N",n:"Kaiman AI",sym:"KAI",risk:"Medio–alto",c:"var(--a3)"},
  {k:"O",n:"GameOn",sym:"GAME",risk:"Alto",c:"var(--a4)"},
  {k:"K",n:"Krugs",sym:"KRG",risk:"Muy alto",c:"var(--a5)"}];
-const PRICES={S:[100,101,102,103,105,106,107,130],G:[150,165,168,162,135,162,173,285],N:[100,115,118,113,90,117,125,165],O:[85,81,83,87,65,74,78,38],K:[10,11,14,8,5,35,7,100000]};
+const PRICES={S:[100,101,102,103,105,106,107,130],G:[150,165,168,162,135,162,173,285],N:[100,115,118,113,90,117,125,0],O:[85,81,83,87,65,74,78,200],K:[10,11,14,8,5,35,7,80]};
 const ROUNDS=[
  {t:"Arma tu portafolio",tag:"Inicio",news:"Cada activo tiene su propio precio. Repartan su capital de $10.000: máximo 50% en un solo activo."},
  {t:"Mercado normal",tag:"Normal",news:"Kaiman AI anuncia crecimiento de ventas. Green Future consigue un contrato internacional."},
@@ -406,7 +406,7 @@ const GUIDE={
  cerrado:{todo:"Mercado cerrado: no se aceptan tickets nuevos. Registra en la Mesa del Broker los tickets del buzón y luego pasa a la siguiente ronda.",btn:"Siguiente ronda",cls:"primary"}};
 const anaSec=()=>S.settings.analysisSec||60, mktSec=()=>S.settings.marketSec||300;
 const dur=sec=>sec%60===0?(sec/60)+" min":sec>=60?Math.floor(sec/60)+" min "+(sec%60)+" s":sec+" s";
-const CAPITAL=10000, KEY="smc-broker-v1", VERSION="2026.10.21.3";
+const CAPITAL=10000, KEY="smc-broker-v1", VERSION="2026.10.21.4";
 const newer=(a,b)=>String(a||"").localeCompare(String(b||""),undefined,{numeric:true})>0;
 
 /* ---------- State ---------- */
@@ -628,7 +628,7 @@ function tickersHTML(r){const nCols=maxRound()+1;
     return `<div class="card ticker" style="--c:${a.c}"><div class="ticker-top"></div><div class="ticker-body">
       <div class="sym"><b>$${a.sym}</b><span class="lbl">Riesgo ${a.risk}</span></div>
       <div class="nm">${a.n}</div><div class="px" style="${p>=10000?"font-size:clamp(26px,2.6vw,36px)":""}">$${fmt(p)}</div>
-      <span class="chg ${r?chgCls(ch):"z"}">${r?arrow(ch)+" "+pctLabel(ch):"Precio inicial"}</span>${sp}
+      <span class="chg ${r?chgCls(ch):"z"}">${p===0?"✕ Quebró · −100%":r?arrow(ch)+" "+pctLabel(ch):"Precio inicial"}</span>${sp}
       <div class="muted num" style="font-size:12px">Desde el inicio ${pctLabel(pct(p,PRICES[a.k][0]))}</div></div></div>`}).join("")}
 function renderMercado2(r,R,nCols,tickers,moves){
   const line=lineChart({series:ASSETS.map(a=>({id:a.k,name:a.n,short:a.sym,color:a.c,vals:PRICES[a.k].slice(0,nCols)})),upto:r,nCols,yfmt:v=>"$"+kfmt(v),tipFn:priceTip});
